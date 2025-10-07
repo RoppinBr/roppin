@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roppin</title>
+
+    <link rel="icon" type="image/png" href="head.jpeg">
+
+    <meta name="description" content="Roppin é o seu marketplace de serviços por geolocalização. Encontre profissionais qualificados (faxina, manutenção, aulas) na sua região e agende com segurança via chat e pagamento online.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+
+    <script>
+        tailwind.config = {
+            
+        }
+    </script>
+
+    <style>
+    .fade-in { opacity:0; transform: translateY(40px); transition: all 0.8s ease-out; }
+    .fade-in.visible { opacity:1; transform: translateY(0); }
+    .button-animate { transition: all 0.3s ease; }
+    .button-animate:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.3);}
+    
+    body {
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    
+    .mobile-header {
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 50;
+    }
+
+    
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 16rem; 
+        padding: 1.5rem;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        z-index: 50;
+    }
+
+    
+    #nav-menu.active {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        text-align: center;
+        background-color: #b91c1c; 
+        padding: 1rem 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        position: absolute;
+        left: 0;
+        top: 100%;
+    }
+
+    #nav-menu.active li {
+        margin: 0.5rem 0;
+    }
+
+    #nav-menu.active a {
+        display: block;
+        padding: 0.25rem 1rem;
+        font-size: 1rem; 
+    }
+    
+    
+    @media (min-width: 768px) {
+        .desktop-padding-top {
+            padding-top: calc(1rem + 36px) !important; 
+        }
+    }
+
+    /* Estilo Adicional para o Pop-up de Login/Cadastro */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; display: none; justify-content: center; align-items: center;
+    }
+    .modal-content {
+        background: white; padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+</style>
+</head>
+<body class="bg-gray-100 text-gray-800 scroll-smooth">
+
+<div id="auth-modal" class="modal-overlay">
+    <div class="modal-content text-center">
+        <h3 class="text-2xl font-bold text-red-700 mb-6">Entre ou Cadastre-se</h3>
+        <p class="mb-4 text-gray-600">Para continuar, escolha seu perfil:</p>
+        
+        <div class="flex flex-col space-y-4">
+            <button class="bg-red-700 text-white px-6 py-3 rounded-full font-bold hover:bg-red-800 button-animate transition-colors" onclick="alert('Redirecionar para Login/Cadastro do Cliente')">
+                <i class="fas fa-user mr-2"></i> Sou Cliente
+            </button>
+            <button class="bg-gray-700 text-white px-6 py-3 rounded-full font-bold hover:bg-gray-800 button-animate transition-colors" onclick="alert('Redirecionar para Login/Cadastro do Prestador')">
+                <i class="fas fa-tools mr-2"></i> Sou Prestador
+            </button>
+        </div>
+        <button class="text-gray-500 mt-4 hover:text-red-700 transition-colors" onclick="document.getElementById('auth-modal').style.display='none'">Fechar</button>
+    </div>
+</div>
+<nav class="hidden md:flex flex-col bg-red-700 text-white sidebar">
+    <a href="#home" class="mb-10 mt-2">
+        <img src="logo.jpeg" alt="Logo da Roppin" class="h-20 w-20 mx-auto rounded-full object-cover">
+    </a>
+    
+    <ul class="flex flex-col space-y-4">
+        <li><a href="#home" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+            <i class="fas fa-home mr-3"></i> Início</a></li>
+        <li><a href="#sobre" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+            <i class="fas fa-lightbulb mr-3"></i> Sobre & Conceito</a></li>
+        <li><a href="#servicos" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+            <i class="fas fa-list-check mr-3"></i> Categorias</a></li>
+        <li><a href="#diferenciais" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+            <i class="fas fa-shield-alt mr-3"></i> Vantagens Roppin</a></li>
+        <li><a href="#clientes" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+            <i class="fas fa-users mr-3"></i> Depoimentos</a></li>
+        <li><a href="#contato" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+            <i class="fas fa-headset mr-3"></i> Ajuda</a></li>
+    </ul>
+
+    <div class="mt-auto pt-6 border-t border-red-600">
+        <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-white text-red-700 px-4 py-2 rounded-full font-bold text-sm text-center block hover:bg-gray-200 button-animate">
+            Acessar Plataforma
+        </button>
+    </div>
+</nav>
+
+<header class="mobile-header bg-red-700 shadow md:hidden">
+    <div class="container mx-auto flex justify-between items-center p-4">
+        <a href="#home">
+            <img src="roppin.png" alt="Logo da Roppin" class="h-14 w-14 rounded-xl object-cover">
+        </a>
+        
+        <div class="flex items-center space-x-3"> 
+             <button onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white text-sm font-semibold px-3 py-1 rounded hover:bg-red-600 transition-colors">
+                 LOGIN
+             </button>
+             <button id="hamburger-menu" class="p-2 rounded-full text-white hover:bg-red-600 transition-colors">
+                 <i class="fas fa-bars text-xl"></i>
+             </button>
+        </div>
+    </div>
+    <ul id="nav-menu" class="hidden">
+        <li><a href="#home" class="text-white hover:text-red-300 font-semibold">Início</a></li>
+        <li><a href="#sobre" class="text-white hover:text-red-300 font-semibold">Sobre & Conceito</a></li>
+        <li><a href="#servicos" class="text-white hover:text-red-300 font-semibold">Categorias</a></li>
+        <li><a href="#diferenciais" class="text-white hover:text-red-300 font-semibold">Vantagens Roppin</a></li>
+        <li><a href="#clientes" class="text-white hover:text-red-300 font-semibold">Depoimentos</a></li>
+        <li><a href="#contato" class="text-white hover:text-red-300 font-semibold">Ajuda</a></li>
+    </ul>
+</header>
+
+<main class="md:pl-64 pt-16 md:pt-0"> 
+    
+    <div id="desktop-top-bar" class="hidden md:flex justify-end items-center px-6 py-2 bg-white border-b border-gray-200 fixed top-0 left-64 right-0 z-40 shadow-sm">
+        <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-red-700 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-red-800 transition-colors">
+            <i class="fas fa-sign-in-alt mr-2"></i> ACESSAR ROSTER
+        </button>
+    </div>
+
+    <section id="home"
+        class="relative h-screen flex justify-center items-center text-center text-white bg-cover bg-center desktop-padding-top"
+        style="background-image: url('home.png');"
+        aria-label="Seção Inicial com Fundo Abstrato e Slogan da Roppin Marketplace">
+        <div class="absolute inset-0 bg-red-800 opacity-80"></div>
+        <div class="relative z-10 px-4">
+            <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4">Roppin: Onde a Necessidade Encontra a Habilidade, na Sua Região.</h1>
+            <p class="text-lg md:text-xl font-light max-w-3xl mx-auto mb-8">
+                Encontre profissionais verificados para serviços de casa, manutenção e bem-estar, a poucos cliques de você.
+            </p>
+            <div class="space-x-4 flex flex-col sm:flex-row justify-center items-center">
+                <a href="#servicos" class="bg-red-600 text-white px-8 py-4 rounded-full font-bold hover:bg-red-700 button-animate mb-4 sm:mb-0">
+                    Buscar um Profissional
+                </a>
+                <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-white text-red-700 px-8 py-4 rounded-full font-bold hover:bg-gray-200 button-animate">
+                    Quero Prestar Serviços
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section id="sobre" class="py-20 bg-red-700 text-white text-center fade-in" aria-label="Seção Sobre a Roppin Marketplace">
+        <h2 class="text-3xl font-bold mb-6">Sobre a Roppin e Nosso Conceito</h2>
+        
+        <p class="max-w-3xl mx-auto mb-12 text-red-100 px-4">Somos a plataforma que conecta clientes que precisam de ajuda em casa e profissionais que buscam mais oportunidades de trabalho, de forma **localizada, segura e eficiente**.</p>
+
+        <div class="container mx-auto flex flex-wrap justify-center gap-8 px-4">
+            
+            <div class="bg-red-600 p-8 rounded-xl shadow-lg w-80 text-left">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-compass text-3xl text-white mr-4" aria-hidden="true"></i>
+                    <h3 class="text-2xl font-bold text-white">Missão</h3>
+                </div>
+                <p class="text-red-100">Ser o principal intermediador de serviços locais, provendo uma plataforma segura e transparente que facilita o match perfeito entre clientes e prestadores.</p>
+            </div>
+
+            <div class="bg-red-600 p-8 rounded-xl shadow-lg w-80 text-left">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-route text-3xl text-white mr-4" aria-hidden="true"></i>
+                    <h3 class="text-2xl font-bold text-white">Visão</h3>
+                </div>
+                <p class="text-red-100">Expandir nossa comunidade para ser referência nacional na economia de serviços por geolocalização, empoderando milhões de profissionais autônomos e simplificando a vida de clientes.</p>
+            </div>
+
+            <div class="bg-red-600 p-8 rounded-xl shadow-lg w-80 text-left">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-book-open text-3xl text-white mr-4" aria-hidden="true"></i>
+                    <h3 class="text-2xl font-bold text-white">Valores</h3>
+                </div>
+                <p class="text-red-100">Localização Estratégica, Segurança Transacional, Transparência, Suporte Dedicado e Empoderamento Profissional.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="servicos" class="py-20 bg-gray-100 text-center fade-in" aria-label="Seção Categorias de Serviços">
+        <h2 class="text-3xl font-bold text-red-700 mb-12">Categorias Populares</h2>
+        <div class="container mx-auto flex flex-wrap justify-center gap-8 px-4">
+            <div class="bg-white shadow-xl p-6 rounded-xl w-72 hover:shadow-2xl transition-all duration-300">
+                <i class="fa-solid fa-broom text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                <h3 class="font-bold text-xl mb-2 text-gray-800">Limpeza Doméstica (Faxina)</h3>
+                <p class="text-gray-600">Profissionais verificados para limpeza pesada, diária ou pós-obra.</p>
+                <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+            </div>
+            <div class="bg-white shadow-xl p-6 rounded-xl w-72 hover:shadow-2xl transition-all duration-300">
+                <i class="fa-solid fa-screwdriver-wrench text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                <h3 class="font-bold text-xl mb-2 text-gray-800">Reparos e Manutenção</h3>
+                <p class="text-gray-600">Eletricistas, encanadores e faz-tudo para pequenos e grandes reparos.</p>
+                <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+            </div>
+            <div class="bg-white shadow-xl p-6 rounded-xl w-72 hover:shadow-2xl transition-all duration-300">
+                <i class="fa-solid fa-palette text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                <h3 class="font-bold text-xl mb-2 text-gray-800">Reforma e Pintura</h3>
+                <p class="text-gray-600">Pintores e pedreiros experientes para renovar sua casa ou apartamento.</p>
+                <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+            </div>
+            <div class="bg-white shadow-xl p-6 rounded-xl w-72 hover:shadow-2xl transition-all duration-300">
+                <i class="fa-solid fa-dog text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                <h3 class="font-bold text-xl mb-2 text-gray-800">Pet Sitter e Cuidados</h3>
+                <p class="text-gray-600">Cuidadores de animais e passeadores na sua vizinhança.</p>
+                <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+            </div>
+        </div>
+        <a href="#contato" class="mt-12 inline-block bg-red-700 text-white px-8 py-4 rounded-full font-bold hover:bg-red-800 button-animate">Ver todas as Categorias</a>
+    </section>
+
+    <section id="diferenciais" class="py-20 bg-white text-center fade-in" aria-label="Seção Vantagens da Plataforma Roppin">
+        <h2 class="text-3xl font-bold text-red-700 mb-12">Por Que Escolher a Roppin?</h2>
+        <div class="container mx-auto flex flex-wrap justify-center gap-8 px-4">
+            <div class="flex flex-col items-center bg-gray-100 p-6 rounded-xl shadow-md w-64 hover:shadow-xl transition-all duration-300">
+                <i class="fa-solid fa-map-location-dot text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                <h3 class="font-bold text-lg mb-2 text-gray-800">Match por Geolocalização</h3>
+                <p class="text-gray-600">Encontre apenas profissionais que estão próximos a você, garantindo agilidade e menor custo de deslocamento.</p>
+            </div>
+            <div class="flex flex-col items-center bg-gray-100 p-6 rounded-xl shadow-md w-64 hover:shadow-xl transition-all duration-300">
+                <i class="fa-solid fa-comments text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                <h3 class="font-bold text-lg mb-2 text-gray-800">Chat Integrado</h3>
+                <p class="text-gray-600">Comunique-se com o profissional diretamente no site para negociar detalhes e alinhar expectativas.</p>
+            </div>
+            <div class="flex flex-col items-center bg-gray-100 p-6 rounded-xl shadow-md w-64 hover:shadow-xl transition-all duration-300">
+                <i class="fa-solid fa-credit-card text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                <h3 class="font-bold text-lg mb-2 text-gray-800">Pagamento Seguro na Plataforma</h3>
+                <p class="text-gray-600">O pagamento é feito online e liberado ao prestador somente após a confirmação da conclusão do serviço.</p>
+            </div>
+            <div class="flex flex-col items-center bg-gray-100 p-6 rounded-xl shadow-md w-64 hover:shadow-xl transition-all duration-300">
+                <i class="fa-solid fa-user-check text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                <h3 class="font-bold text-lg mb-2 text-gray-800">Profissionais Avaliados</h3>
+                <p class="text-gray-600">Escolha com confiança, baseando-se em avaliações e descrições detalhadas de cada prestador.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="clientes" class="py-20 bg-gray-100 text-center fade-in" aria-label="Seção Depoimentos/Carrossel de Clientes">
+        <h2 class="text-3xl font-bold text-red-700 mb-12">O que dizem sobre a Roppin</h2>
+        <div class="swiper mySwiperClientes container mx-auto px-4">
+             <div class="swiper-wrapper">
+                <div class="swiper-slide p-6 bg-white rounded-xl shadow-lg text-left">
+                    <p class="text-gray-700 italic mb-4">"Encontrei uma faxineira excelente a 5 minutos da minha casa. Agendamento e pagamento super fáceis!"</p>
+                    <p class="font-bold text-red-700">- Ana C., Cliente</p>
+                </div>
+                <div class="swiper-slide p-6 bg-white rounded-xl shadow-lg text-left">
+                    <p class="text-gray-700 italic mb-4">"A plataforma me trouxe clientes fixos na minha região. O pagamento no site me dá muita segurança."</p>
+                    <p class="font-bold text-red-700">- João M., Eletricista</p>
+                </div>
+                <div class="swiper-slide p-6 bg-white rounded-xl shadow-lg text-left">
+                    <p class="text-gray-700 italic mb-4">"O chat e a busca por localização são perfeitos. Contratei um pintor em um dia."</p>
+                    <p class="font-bold text-red-700">- Carla S., Cliente</p>
+                </div>
+                <div class="swiper-slide p-6 bg-white rounded-xl shadow-lg text-left">
+                    <p class="text-gray-700 italic mb-4">"Plataforma justa, que valoriza meu trabalho e me conecta com a demanda certa."</p>
+                    <p class="font-bold text-red-700">- Pedro H., Jardineiro</p>
+                </div>
+                <div class="swiper-slide p-6 bg-white rounded-xl shadow-lg text-left">
+                    <p class="text-gray-700 italic mb-4">"Encontrei uma faxineira excelente a 5 minutos da minha casa. Agendamento e pagamento super fáceis!"</p>
+                    <p class="font-bold text-red-700">- Ana C., Cliente</p>
+                </div>
+                <div class="swiper-slide p-6 bg-white rounded-xl shadow-lg text-left">
+                    <p class="text-gray-700 italic mb-4">"A plataforma me trouxe clientes fixos na minha região. O pagamento no site me dá muita segurança."</p>
+                    <p class="font-bold text-red-700">- João M., Eletricista</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contato" class="py-20 bg-white text-center fade-in" aria-label="Seção de Contato e Localização">
+        <h2 class="text-3xl font-bold text-red-700 mb-6">Fale Conosco</h2>
+        <p class="max-w-2xl mx-auto mb-8 text-gray-600 px-4">Tem dúvidas sobre como funciona a Roppin? Fale com nosso suporte.</p>
+        
+        <div class="flex flex-col md:flex-row justify-around gap-8 mb-12 w-full md:w-3/4 lg:w-2/3 mx-auto px-4">
+        <a href="tel:+551940421190" class="flex flex-col items-center p-6 bg-gray-100 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 w-full md:w-auto">
+            <i class="fa-solid fa-phone text-3xl text-red-700 mb-2" aria-hidden="true"></i>
+            <p class="font-bold text-gray-800">Ligue para o Suporte</p>
+            <p class="text-gray-600">(19) 12345-6789</p>
+        </a>
+        <a href="mailto:contato@roppin.com" class="flex flex-col items-center p-6 bg-gray-100 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 w-full md:w-auto">
+            <i class="fa-solid fa-envelope text-3xl text-red-700 mb-2" aria-hidden="true"></i>                            
+            <p class="font-bold text-gray-800">E-mail de Dúvidas</p>
+            <p class="text-gray-600">contato@roppin.com</p>
+        </a>
+    </div>
+
+        <form action="https://formspree.io" method="POST" class="max-w-xl mx-auto space-y-4 px-4 mb-12">
+            <h3 class="text-xl font-semibold text-gray-700">Envie uma Mensagem</h3>
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" name="nome" placeholder="Seu nome" required
+                    class="w-full md:w-1/2 border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+                <input type="email" name="email" placeholder="Seu e-mail" required
+                    class="w-full md:w-1/2 border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+            </div>
+            <textarea name="mensagem" rows="4" placeholder="Mensagem" required
+                class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+            <button type="submit"
+                class="bg-red-700 text-white px-6 py-3 rounded-full font-semibold button-animate hover:bg-red-800">
+                Enviar
+            </button>
+        </form>
+        
+    </section>
+
+    <footer class="bg-red-700 text-white text-center py-8 md:pl-64"> 
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-center items-center md:justify-between mb-4">
+                <div><img src="roppin.png" alt="Logo da Roppin" class="h-20 w-20 mx-auto md:mx-0 rounded-xl object-cover"></div> 
+                <div class="flex space-x-6">
+                    <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" class="text-white hover:text-red-300 transition-colors" aria-label="LinkedIn da Roppin">
+                        <i class="fab fa-linkedin-in text-2xl" aria-hidden="true"></i>
+                    </a>
+                    <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="text-white hover:text-red-300 transition-colors" aria-label="Instagram da Roppin">
+                        <i class="fab fa-instagram text-2xl" aria-hidden="true"></i>
+                    </a>
+                    <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="text-white hover:text-red-300 transition-colors" aria-label="Facebook da Roppin">
+                        <i class="fab fa-facebook-f text-2xl" aria-hidden="true"></i>
+                    </a>
+                    <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="text-white hover:text-red-300 transition-colors" aria-label="YouTube da Roppin">
+                        <i class="fab fa-youtube text-2xl" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-red-600 pt-4 mt-4 text-sm">
+                <p>Plataforma de Intermediação de Serviços Locais</p>
+                <p>Rua Alguma Coisa, 11, Campinas-SP</p>
+                <p>Telefone: (19) 12345-6789 | E-mail: contato@roppin.com</p>
+                <p class="mt-2">CNPJ: 00.000.000/0000-00</p>
+                <p>Roppin Tecnologia LTDA</p>
+                <p>© <span id="current-year"></span> Roppin - Todos os direitos reservados.</p>
+                <p>Criado por Octavio Rodrigues Schwab</p>
+            </div>
+        </div>
+    </footer>
+
+</main> <a href="https://wa.me/5519123456789" class="fixed bottom-6 right-6 z-50 bg-green-600 text-white rounded-full p-4 shadow-xl hover:bg-green-700 transition-transform transform hover:scale-110" target="_blank" rel="noopener noreferrer" aria-label="Fale conosco pelo WhatsApp">
+    <i class="fab fa-whatsapp text-3xl" aria-hidden="true"></i>
+</a>
+
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
+    const observer = new IntersectionObserver(entries=>{
+        entries.forEach(entry=>{
+            if(entry.isIntersecting) entry.target.classList.add('visible');
+        });
+    },{threshold:0.1});
+    document.querySelectorAll('.fade-in').forEach(e=>observer.observe(e));
+    
+    // Configuração do Swiper para Depoimentos
+    const swiperClientes = new Swiper(".mySwiperClientes", {
+        slidesPerView: 1, // Exibe 1 slide em telas pequenas
+        spaceBetween: 20,
+        loop: true,
+        autoplay: {
+            delay: 4000,
+            disableOnInteraction: false,
+        },
+        breakpoints: {
+            768: {
+                slidesPerView: 2, // Exibe 2 slides em tablets
+                spaceBetween: 30,
+            },
+            1024: {
+                slidesPerView: 3, // Exibe 3 slides em desktop
+                spaceBetween: 40,
+            },
+        },
+    });
+
+    
+    const hamburgerBtn = document.getElementById('hamburger-menu');
+    const navMenu = document.getElementById('nav-menu');
+
+    hamburgerBtn.addEventListener('click', () => {
+        navMenu.classList.toggle('active');
+    });
+
+    
+    navMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            navMenu.classList.remove('active');
+        });
+    });
+
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+</script></body>
+</html>

@@ -15,76 +15,15 @@
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
 
+    <link rel="stylesheet" href="src/stylesheets/index.css">
+
     <script>
         tailwind.config = {
             
         }
     </script>
 
-    <style>
-    .fade-in { opacity:0; transform: translateY(40px); transition: all 0.8s ease-out; }
-    .fade-in.visible { opacity:1; transform: translateY(0); }
-    .button-animate { transition: all 0.3s ease; }
-    .button-animate:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.3);}
     
-    body {
-        transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    .mobile-header {
-        position: fixed;
-        width: 100%;
-        top: 0;
-        z-index: 50;
-    }
-
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100vh;
-        width: 16rem; 
-        padding: 1.5rem;
-        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-        z-index: 50;
-    }
-
-    #nav-menu.active {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        text-align: center;
-        background-color: #b91c1c; 
-        padding: 1rem 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        position: absolute;
-        left: 0;
-        top: 100%;
-    }
-
-    #nav-menu.active li {
-        margin: 0.5rem 0;
-    }
-
-    #nav-menu.active a {
-        display: block;
-        padding: 0.25rem 1rem;
-        font-size: 1rem; 
-    }
-    
-    @media (min-width: 768px) {
-        .desktop-padding-top {
-            padding-top: calc(1rem + 36px) !important; 
-        }
-    }
-
-    .modal-overlay {
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; display: none; justify-content: center; align-items: center;
-    }
-    .modal-content {
-        background: white; padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-    </style>
 </head>
 <body class="bg-gray-100 text-gray-800 scroll-smooth">
 
@@ -500,7 +439,13 @@
     </footer>
 
 </main> 
-<a href="https://wa.me/5519123456789" class="fixed bottom-6 right-6 z-50 bg-green-600 text-white rounded-full p-4 shadow-xl hover:bg-green-700 transition-transform transform hover:scale-110" target="_blank" rel="noopener noreferrer" aria-label="Fale conosco pelo WhatsApp">
+
+<a href="https://wa.me/5519123456789" 
+   class="fixed bottom-6 right-6 z-50 bg-green-600 text-white rounded-full shadow-xl hover:bg-green-700 transition-transform transform hover:scale-110 flex items-center justify-center" 
+   style="width: 64px; height: 64px;" 
+   target="_blank" 
+   rel="noopener noreferrer" 
+   aria-label="Fale conosco pelo WhatsApp">
     <i class="fab fa-whatsapp text-3xl" aria-hidden="true"></i>
 </a>
 

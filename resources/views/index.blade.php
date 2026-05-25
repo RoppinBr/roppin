@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roppin - Seu marketplace inteligente</title>
+
+    <link rel="icon" type="image/png" href="roppin_Logo.png">
+
+    <meta name="description" content="Roppin é o seu marketplace de serviços por geolocalização movido a IA. Encontre profissionais qualificados na sua região apenas dizendo o que precisa.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+
+    <link rel="stylesheet" href="{{ asset('css/index.css') }}">
+
+    <script>
+        console.log(asset('css/index.css'))
+    </script>
+</head>
+
+<body class="bg-gray-100 text-gray-800 scroll-smooth">
+
+    <div id="auth-modal" class="modal-overlay">
+        <div class="modal-content relative text-center">
+            <!-- Botão Fechar -->
+            <button onclick="fecharModal()" class="absolute top-4 right-4 text-gray-500 hover:text-red-700 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+
+            <h3 id="modal-title" class="text-2xl font-bold text-red-700 mb-6">Acessar Plataforma</h3>
+            
+            <!-- Formulário de Login -->
+            <form id="login-form" class="flex flex-col space-y-4">
+                <input type="email" placeholder="Seu E-mail" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+                <input type="password" placeholder="Sua Senha" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+                <div class="flex justify-between items-center text-sm">
+                    <label class="flex items-center text-gray-600">
+                        <input type="checkbox" class="mr-2"> Lembrar-me
+                    </label>
+                    <a href="#" class="text-red-700 hover:underline">Esqueceu a senha?</a>
+                </div>
+                <button type="submit" class="bg-red-700 text-white px-6 py-3 rounded-full font-bold hover:bg-red-800 transition-colors button-animate">
+                    Entrar
+                </button>
+                <p class="text-gray-600 mt-4">Ainda não tem conta? <a href="#" onclick="alternarFormulario('cadastro')" class="text-red-700 font-bold hover:underline">Cadastre-se</a></p>
+            </form>
+
+            <!-- Formulário de Cadastro -->
+            <form id="register-form" class="hidden flex flex-col space-y-4">
+                <div class="flex justify-center space-x-4 mb-2">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="tipo_usuario" value="cliente" checked class="mr-2 text-red-700 focus:ring-red-500"> Sou Cliente
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="tipo_usuario" value="prestador" class="mr-2 text-red-700 focus:ring-red-500"> Sou Prestador
+                    </label>
+                </div>
+                <input type="text" placeholder="Nome Completo" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+                <input type="email" placeholder="E-mail" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+                <input type="password" placeholder="Crie uma Senha" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+                <button type="submit" class="bg-gray-800 text-white px-6 py-3 rounded-full font-bold hover:bg-gray-900 transition-colors button-animate">
+                    Criar Conta
+                </button>
+                <p class="text-gray-600 mt-4">Já tem uma conta? <a href="#" onclick="alternarFormulario('login')" class="text-red-700 font-bold hover:underline">Faça Login</a></p>
+            </form>
+        </div>
+    </div>
+
+    <nav class="hidden md:flex flex-col bg-red-700 text-white sidebar">
+        <a href="#home" class="mb-10 mt-2">
+            <img src="{{ asset('images/roppin_Logo_circulo.png') }}" alt="Logo da Roppin" class="h-20 w-20 mx-auto rounded-full object-cover">
+        </a>
+        
+        <ul class="flex flex-col space-y-4">
+            <li><a href="#home" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+                <i class="fas fa-home mr-3"></i> Início</a></li>
+            <li><a href="#sobre" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+                <i class="fas fa-lightbulb mr-3"></i> Sobre & Conceito</a></li>
+            <li><a href="#servicos" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+                <i class="fas fa-list-check mr-3"></i> Categorias</a></li>
+            <li><a href="#diferenciais" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+                <i class="fas fa-shield-alt mr-3"></i> Vantagens Roppin</a></li>
+            <li><a href="#clientes" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+                <i class="fas fa-users mr-3"></i> Depoimentos</a></li>
+            <li><a href="#contato" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
+                <i class="fas fa-headset mr-3"></i> Ajuda</a></li>
+        </ul>
+
+        <div class="mt-auto pt-6 border-t border-red-600">
+            <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-white text-red-700 px-4 py-2 rounded-full font-bold text-sm text-center block hover:bg-gray-200 button-animate w-full">
+                Acessar Plataforma
+            </button>
+        </div>
+    </nav>
+
+    <header class="mobile-header bg-red-700 shadow md:hidden">
+        <div class="container mx-auto flex justify-between items-center p-4">
+            <a href="#home">
+                <img src="{{ asset('images/roppin_Logotipo.png') }}" alt="Logo da Roppin" class="h-14 w-14 rounded-xl object-cover">
+            </a>
+            
+            <div class="flex items-center space-x-3"> 
+                <button onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white text-sm font-semibold px-3 py-1 rounded hover:bg-red-600 transition-colors">
+                    LOGIN
+                </button>
+                <button id="hamburger-menu" class="p-2 rounded-full text-white hover:bg-red-600 transition-colors">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <ul id="nav-menu" class="hidden">
+            <li><a href="#home" class="text-white hover:text-red-300 font-semibold">Início</a></li>
+            <li><a href="#sobre" class="text-white hover:text-red-300 font-semibold">Sobre & Conceito</a></li>
+            <li><a href="#servicos" class="text-white hover:text-red-300 font-semibold">Categorias</a></li>
+            <li><a href="#diferenciais" class="text-white hover:text-red-300 font-semibold">Vantagens Roppin</a></li>
+            <li><a href="#clientes" class="text-white hover:text-red-300 font-semibold">Depoimentos</a></li>
+            <li><a href="#contato" class="text-white hover:text-red-300 font-semibold">Ajuda</a></li>
+        </ul>
+    </header>
+
+    <main class="md:pl-64 pt-16 md:pt-0"> 
+        
+        <div id="desktop-top-bar" class="hidden md:flex justify-end items-center px-6 py-2 bg-white border-b border-gray-200 fixed top-0 left-64 right-0 z-40 shadow-sm">
+            <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-red-700 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-red-800 transition-colors">
+                <i class="fas fa-sign-in-alt mr-2"></i> ACESSAR ROSTER
+            </button>
+        </div>
+
+        <!-- SEÇÃO HOME -->
+        <section id="home"
+            class="relative h-screen flex justify-center items-center text-center text-white bg-cover bg-center desktop-padding-top"
+            style="background-image: url('home.png');"
+            aria-label="Seção Inicial com Fundo Abstrato e Slogan da Roppin Marketplace">
+            <div class="absolute inset-0 bg-red-800 opacity-80"></div>
+            <div class="relative z-10 px-4 w-full max-w-4xl mx-auto">
+                <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4">Seu marketplace inteligente de serviços.</h1>
+                <p class="text-lg md:text-xl font-light mb-8">
+                    Diga o que você precisa. Nossa Inteligência Artificial encontra o profissional perfeito na sua região em segundos.
+                </p>
+                
+                <!-- Barra de Busca IA -->
+                <div class="mt-4 bg-white p-2 rounded-full flex flex-col md:flex-row items-center w-full shadow-2xl">
+                    <input type="text" placeholder="O que você precisa hoje? (Ex: Preciso de uma faxina amanhã de manhã)" class="flex-grow w-full bg-transparent border-none focus:outline-none px-6 py-3 text-gray-800 text-base mb-2 md:mb-0 placeholder-gray-500">
+                    <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-red-700 text-white w-full md:w-auto px-8 py-3 rounded-full font-bold hover:bg-red-800 transition-colors whitespace-nowrap flex justify-center items-center button-animate">
+                        <i class="fas fa-sparkles mr-2"></i> Buscar com IA
+                    </button>
+                </div>
+
+                <div class="mt-8">
+                    <button onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white underline hover:text-gray-200 font-semibold transition-colors">
+                        Sou profissional e quero prestar serviços
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO SOBRE -->
+        <section id="sobre" class="py-20 bg-red-700 text-white text-center fade-in" aria-label="Seção Sobre a Roppin Marketplace">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6">Por que nascemos?</h2>
+                
+                <p class="max-w-3xl mx-auto mb-16 text-lg text-red-100">
+                    Transformamos a forma como pessoas e empresas encontram serviços essenciais. Aliamos Inteligência Artificial e a facilidade do WhatsApp para trazer os melhores prestadores até você.
+                </p>
+
+                <!-- Propósito, Solução, Tudo em 1 Lugar (Cards Brancos - Sempre Visíveis) -->
+                <div class="flex flex-wrap justify-center gap-8 mb-12">
+                    <div class="bg-white p-8 rounded-2xl shadow-xl w-full md:w-80 text-left hover:-translate-y-2 transition-transform duration-300">
+                        <div class="bg-red-100 w-14 h-14 rounded-full flex items-center justify-center mb-6">
+                            <i class="fas fa-bullseye text-2xl text-red-700" aria-hidden="true"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Nosso Propósito</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Acabar com a perda de tempo e a frustração na hora de contratar serviços. Queremos ser o elo de confiança que conecta quem precisa de ajuda com os melhores talentos da região.</p>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-2xl shadow-xl w-full md:w-80 text-left hover:-translate-y-2 transition-transform duration-300">
+                        <div class="bg-red-100 w-14 h-14 rounded-full flex items-center justify-center mb-6">
+                            <i class="fas fa-robot text-2xl text-red-700" aria-hidden="true"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">A Solução Roppin</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Um marketplace inteligente que entende o que você fala. Envie uma mensagem e nossa IA encontra, filtra e recomenda instantaneamente os melhores profissionais perto de você.</p>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-2xl shadow-xl w-full md:w-80 text-left hover:-translate-y-2 transition-transform duration-300">
+                        <div class="bg-red-100 w-14 h-14 rounded-full flex items-center justify-center mb-6">
+                            <i class="fas fa-database text-2xl text-red-700" aria-hidden="true"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Tudo em 1 Lugar</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Diga adeus aos contatos espalhados e indicações incertas. A Roppin centraliza preços, avaliações, disponibilidade e localização em um ambiente único e seguro.</p>
+                    </div>
+                </div>
+
+                <!-- Botão de Expandir -->
+                <button id="btn-expandir-sobre" onclick="toggleSobreExtra()" class="bg-transparent border-2 border-red-400 text-white px-8 py-3 rounded-full font-bold hover:bg-red-600 hover:border-red-600 transition-colors flex items-center justify-center mx-auto mb-4">
+                    <span id="texto-btn-sobre">Conhecer nossa história e equipe</span>
+                    <i id="icone-btn-sobre" class="fas fa-chevron-down ml-3"></i>
+                </button>
+
+                <!-- CONTEÚDO EXTRA (Oculto inicialmente) -->
+                <div id="conteudo-extra-sobre" class="hidden opacity-0 transition-opacity duration-500 mt-16">
+                    
+                    <!-- Divisor Visual -->
+                    <div class="w-24 h-1 bg-red-500 mx-auto mb-16 rounded-full"></div>
+
+                    <!-- Missão, Visão, Valores -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-24 max-w-5xl mx-auto">
+                        <div class="flex flex-col items-center text-center px-4">
+                            <i class="fas fa-compass text-4xl text-red-300 mb-4" aria-hidden="true"></i>
+                            <h3 class="text-xl font-bold text-white mb-2">Missão</h3>
+                            <p class="text-sm text-red-100 leading-relaxed">Ser o principal intermediador de serviços locais, provendo uma plataforma segura e transparente que facilita o match perfeito entre clientes e prestadores.</p>
+                        </div>
+                        <div class="flex flex-col items-center text-center px-4">
+                            <i class="fas fa-route text-4xl text-red-300 mb-4" aria-hidden="true"></i>
+                            <h3 class="text-xl font-bold text-white mb-2">Visão</h3>
+                            <p class="text-sm text-red-100 leading-relaxed">Expandir nossa comunidade para ser referência nacional na economia de serviços por geolocalização, simplificando a vida de clientes.</p>
+                        </div>
+                        <div class="flex flex-col items-center text-center px-4">
+                            <i class="fas fa-book-open text-4xl text-red-300 mb-4" aria-hidden="true"></i>
+                            <h3 class="text-xl font-bold text-white mb-2">Valores</h3>
+                            <p class="text-sm text-red-100 leading-relaxed">Localização Estratégica, Segurança Transacional, Transparência, Suporte Dedicado e Empoderamento Profissional.</p>
+                        </div>
+                    </div>
+
+                    <!-- Conheça o Time -->
+                    <h3 class="text-3xl font-bold mb-12">Quem faz a Roppin acontecer</h3>
+
+                    <div class="max-w-5xl mx-auto">
+                        <!-- CEO (Destaque) -->
+                        <div class="flex justify-center mb-16">
+                            <div class="flex flex-col items-center bg-red-800 p-6 rounded-2xl shadow-lg border border-red-600 w-full max-w-sm">
+                                <img src="{{ asset('images/CEO.jpeg') }}" alt="Foto do CEO" class="w-32 h-32 rounded-full border-4 border-red-400 object-cover mb-4">
+                                <h4 class="text-xl font-bold text-white">João Moraes</h4>
+                                <p class="text-red-300 font-bold tracking-wide text-sm mb-2">CEO</p>
+                                <p class="text-xs text-red-200 mb-2 italic">"Visão estratégica e liderança executiva."</p>
+                                <a href="mailto:joao.moraes36@fatec.sp.gov.br" class="text-xs text-white underline hover:text-red-300">joao.moraes36@fatec.sp.gov.br</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Restante da Diretoria -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
+                            <!-- Template de Membro (Repita este bloco para cada um) -->
+                            <div class="flex flex-col items-center bg-red-800 p-4 rounded-xl border border-red-600">
+                                <img src="{{ asset('images/CTO.jpeg') }}" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
+                                <h4 class="text-sm font-bold text-white">Otávio Zampar</h4>
+                                <p class="text-red-300 text-xs font-bold mb-1">CTO</p>
+                                <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Responsável pela arquitetura de software e tecnologia.</p>
+                                <a href="mailto:otavio.zampar@fatec.sp.gov.br" class="break-all text-[10px] text-white underline">otavio.zampar@fatec.sp.gov.br</a>
+                            </div>
+
+                            <div class="flex flex-col items-center bg-red-800 p-4 rounded-xl border border-red-600">
+                                <img src="{{ asset('images/CFO.jpeg') }}" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
+                                <h4 class="text-sm font-bold text-white">Fernando Padula</h4>
+                                <p class="text-red-300 text-xs font-bold mb-1">CFO</p>
+                                <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Gestão financeira e planejamento orçamentário.</p>
+                                <a href="mailto:fernando.padula@fatec.sp.gov.br" class="break-all text-[10px] text-white underline">fernando.padula@fatec.sp.gov.br</a>
+                            </div>
+
+                            <div class="flex flex-col items-center bg-red-800 p-4 rounded-xl border border-red-600">
+                                <img src="{{ asset('images/COO.jpeg') }}" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
+                                <h4 class="text-sm font-bold text-white">Gabriel Feliciano</h4>
+                                <p class="text-red-300 text-xs font-bold mb-1">COO</p>
+                                <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Operações, logística e eficiência do dia a dia.</p>
+                                <a href="mailto:gabriel.feliciano@fatec.sp.gov.br" class="break-all text-[10px] text-white underline">gabriel.feliciano@fatec.sp.gov.br</a>
+                            </div>
+
+                            <div class="flex flex-col items-center bg-red-800 p-4 rounded-xl border border-red-600">
+                                <img src="{{ asset('images/CMO.jpeg') }}" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
+                                <h4 class="text-sm font-bold text-white">Patrícia Amanda</h4>
+                                <p class="text-red-300 text-xs font-bold mb-1">CMO</p>
+                                <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Marketing, branding e aquisição de clientes.</p>
+                                <a href="mailto:patricia.pereira11@fatec.sp.gov.br" class="break-all text-[10px] text-white underline">patricia.pereira11@fatec.sp.gov.br</a>
+                            </div>
+
+                            <div class="flex flex-col items-center bg-red-800 p-4 rounded-xl border border-red-600">
+                                <img src="{{ asset('images/CSO.jpeg') }}" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
+                                <h4 class="text-sm font-bold text-white">Luiz Domingues</h4>
+                                <p class="text-red-300 text-xs font-bold mb-1">CSO</p>
+                                <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Vendas, expansão e relacionamento estratégico.</p>
+                                <a href="mailto:luiz.domingues4@fatec.sp.gov.br" class="break-all text-[10px] text-white underline">luiz.domingues4@fatec.sp.gov.br</a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="servicos" class="py-20 bg-gray-100 text-center fade-in" aria-label="Seção Categorias de Serviços">
+            <h2 class="text-3xl font-bold text-red-700 mb-12">Serviços mais pedidos</h2>
+            <div class="container mx-auto flex flex-wrap justify-center gap-8 px-4">
+                <div class="bg-white shadow-xl p-6 rounded-xl w-72 hover:shadow-2xl transition-all duration-300">
+                    <i class="fa-solid fa-broom text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                    <h3 class="font-bold text-xl mb-2 text-gray-800">Limpeza Doméstica (Faxina)</h3>
+                    <p class="text-gray-600">Profissionais verificados para limpeza pesada, diária ou pós-obra.</p>
+                    <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+                </div>
+                <div class="bg-white shadow-xl p-6 rounded-xl w-72 hover:shadow-2xl transition-all duration-300">
+                    <i class="fa-solid fa-screwdriver-wrench text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                    <h3 class="font-bold text-xl mb-2 text-gray-800">Reparos e Manutenção</h3>
+                    <p class="text-gray-600">Eletricistas, encanadores e faz-tudo para pequenos e grandes reparos.</p>
+                    <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+                </div>
+                <div class="bg-white shadow-xl p-6 rounded-xl w-72 hover:shadow-2xl transition-all duration-300">
+                    <i class="fa-solid fa-palette text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                    <h3 class="font-bold text-xl mb-2 text-gray-800">Reforma e Pintura</h3>
+                    <p class="text-gray-600">Pintores e pedreiros experientes para renovar sua casa ou apartamento.</p>
+                    <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+                </div>
+                <div class="bg-white shadow-xl p-6 rounded-xl w-72 hover:shadow-2xl transition-all duration-300">
+                    <i class="fa-solid fa-dog text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                    <h3 class="font-bold text-xl mb-2 text-gray-800">Pet Sitter e Cuidados</h3>
+                    <p class="text-gray-600">Cuidadores de animais e passeadores na sua vizinhança.</p>
+                    <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+                </div>
+            </div>
+            <a href="#contato" class="mt-12 inline-block bg-red-700 text-white px-8 py-4 rounded-full font-bold hover:bg-red-800 button-animate">Ver todas as Categorias</a>
+        </section>
+
+        <section id="diferenciais" class="py-20 bg-white text-center fade-in" aria-label="Seção Vantagens da Plataforma Roppin">
+            <h2 class="text-3xl font-bold text-red-700 mb-12">Por Que Escolher a Roppin?</h2>
+            <div class="container mx-auto flex flex-wrap justify-center gap-8 px-4">
+                <div class="flex flex-col items-center bg-gray-100 p-6 rounded-xl shadow-md w-64 hover:shadow-xl transition-all duration-300">
+                    <i class="fa-solid fa-map-location-dot text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                    <h3 class="font-bold text-lg mb-2 text-gray-800">Match por Geolocalização</h3>
+                    <p class="text-gray-600">Encontre apenas profissionais que estão próximos a você, garantindo agilidade e menor custo de deslocamento.</p>
+                </div>
+                <div class="flex flex-col items-center bg-gray-100 p-6 rounded-xl shadow-md w-64 hover:shadow-xl transition-all duration-300">
+                    <i class="fa-solid fa-comments text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                    <h3 class="font-bold text-lg mb-2 text-gray-800">Chat Integrado</h3>
+                    <p class="text-gray-600">Comunique-se com o profissional diretamente no site para negociar detalhes e alinhar expectativas.</p>
+                </div>
+                <div class="flex flex-col items-center bg-gray-100 p-6 rounded-xl shadow-md w-64 hover:shadow-xl transition-all duration-300">
+                    <i class="fa-solid fa-credit-card text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                    <h3 class="font-bold text-lg mb-2 text-gray-800">Pagamento Seguro</h3>
+                    <p class="text-gray-600">O pagamento é feito online e liberado ao prestador somente após a confirmação da conclusão do serviço.</p>
+                </div>
+                <div class="flex flex-col items-center bg-gray-100 p-6 rounded-xl shadow-md w-64 hover:shadow-xl transition-all duration-300">
+                    <i class="fa-solid fa-user-check text-red-700 text-4xl mb-4" aria-hidden="true"></i>
+                    <h3 class="font-bold text-lg mb-2 text-gray-800">Profissionais Avaliados</h3>
+                    <p class="text-gray-600">Escolha com confiança, baseando-se em avaliações e descrições detalhadas de cada prestador.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="clientes" class="py-20 bg-gray-100 text-center fade-in" aria-label="Seção Depoimentos/Carrossel de Clientes">
+            <h2 class="text-3xl font-bold text-red-700 mb-12">O que dizem sobre a Roppin</h2>
+            <div class="swiper mySwiperClientes container mx-auto px-4">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide p-6 bg-white rounded-xl shadow-lg text-left">
+                        <p class="text-gray-700 italic mb-4">"Encontrei uma faxineira excelente a 5 minutos da minha casa. Agendamento e pagamento super fáceis!"</p>
+                        <p class="font-bold text-red-700">- Ana C., Cliente</p>
+                    </div>
+                    <div class="swiper-slide p-6 bg-white rounded-xl shadow-lg text-left">
+                        <p class="text-gray-700 italic mb-4">"A plataforma me trouxe clientes fixos na minha região. O pagamento no site me dá muita segurança."</p>
+                        <p class="font-bold text-red-700">- João M., Eletricista</p>
+                    </div>
+                    <div class="swiper-slide p-6 bg-white rounded-xl shadow-lg text-left">
+                        <p class="text-gray-700 italic mb-4">"O chat e a busca por localização são perfeitos. Contratei um pintor em um dia."</p>
+                        <p class="font-bold text-red-700">- Carla S., Cliente</p>
+                    </div>
+                    <div class="swiper-slide p-6 bg-white rounded-xl shadow-lg text-left">
+                        <p class="text-gray-700 italic mb-4">"Plataforma justa, que valoriza meu trabalho e me conecta com a demanda certa."</p>
+                        <p class="font-bold text-red-700">- Pedro H., Jardineiro</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contato" class="py-20 bg-white text-center fade-in" aria-label="Seção de Contato e Localização">
+            <h2 class="text-3xl font-bold text-red-700 mb-6">Fale Conosco</h2>
+            <p class="max-w-2xl mx-auto mb-8 text-gray-600 px-4">Tem dúvidas sobre como funciona a Roppin? Fale com nosso suporte.</p>
+            
+            <div class="flex flex-col md:flex-row justify-around gap-8 mb-12 w-full md:w-3/4 lg:w-2/3 mx-auto px-4">
+            <a href="tel:+551940421190" class="flex flex-col items-center p-6 bg-gray-100 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 w-full md:w-auto">
+                <i class="fa-solid fa-phone text-3xl text-red-700 mb-2" aria-hidden="true"></i>
+                <p class="font-bold text-gray-800">Ligue para o Suporte</p>
+                <p class="text-gray-600">(19) 12345-6789</p>
+            </a>
+            <a href="mailto:contato@fatec.sp.gov.br" class="flex flex-col items-center p-6 bg-gray-100 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 w-full md:w-auto">
+                <i class="fa-solid fa-envelope text-3xl text-red-700 mb-2" aria-hidden="true"></i>                            
+                <p class="font-bold text-gray-800">E-mail de Dúvidas</p>
+                <p class="text-gray-600">contato@fatec.sp.gov.br</p>
+            </a>
+        </div>
+
+            <form action="https://formspree.io" method="POST" class="max-w-xl mx-auto space-y-4 px-4 mb-12">
+                <h3 class="text-xl font-semibold text-gray-700">Envie uma Mensagem</h3>
+                <div class="flex flex-col md:flex-row gap-4">
+                    <input type="text" name="nome" placeholder="Seu nome" required
+                        class="w-full md:w-1/2 border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+                    <input type="email" name="email" placeholder="Seu e-mail" required
+                        class="w-full md:w-1/2 border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+                </div>
+                <textarea name="mensagem" rows="4" placeholder="Mensagem" required
+                    class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+                <button type="submit"
+                    class="bg-red-700 text-white px-6 py-3 rounded-full font-semibold button-animate hover:bg-red-800">
+                    Enviar
+                </button>
+            </form>
+            
+        </section>
+
+        <footer class="bg-red-700 text-white text-center py-8 md:pl-64"> 
+            <div class="container mx-auto px-4">
+                <div class="flex flex-col md:flex-row justify-center items-center md:justify-between mb-4">
+                    <div><img src="{{ asset('images/roppin_Logotipo.png') }}" alt="Logo da Roppin" class="h-20 w-20 mx-auto md:mx-0 rounded-xl object-cover"></div> 
+                    <div class="flex space-x-6">
+                        <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" class="text-white hover:text-red-300 transition-colors" aria-label="LinkedIn da Roppin">
+                            <i class="fab fa-linkedin-in text-2xl" aria-hidden="true"></i>
+                        </a>
+                        <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="text-white hover:text-red-300 transition-colors" aria-label="Instagram da Roppin">
+                            <i class="fab fa-instagram text-2xl" aria-hidden="true"></i>
+                        </a>
+                        <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="text-white hover:text-red-300 transition-colors" aria-label="Facebook da Roppin">
+                            <i class="fab fa-facebook-f text-2xl" aria-hidden="true"></i>
+                        </a>
+                        <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="text-white hover:text-red-300 transition-colors" aria-label="YouTube da Roppin">
+                            <i class="fab fa-youtube text-2xl" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="border-t border-red-600 pt-4 mt-4 text-sm">
+                    <p>Faculdade de Tecnologia de Campinas</p>
+                    <p>Av. Cônego Antônio Roccato, 593 - Jardim Santa Monica, Campinas - SP, 13082-015</p>
+                    <p>Telefone: (19) 12345-6789 | E-mail: contato@fatec.sp.gov.br</p>
+                    <p class="mt-2">CNPJ: 00.000.000/0000-00</p>
+                    <p>Roppin Tecnologia LTDA</p>
+                    <p>© <span id="current-year"></span> Roppin - Todos os direitos reservados.</p>
+                </div>
+            </div>
+        </footer>
+
+    </main> 
+
+    <a href="https://wa.me/5519123456789" 
+    class="fixed bottom-6 right-6 z-50 bg-green-600 text-white rounded-full shadow-xl hover:bg-green-700 transition-transform transform hover:scale-110 flex items-center justify-center" 
+    style="width: 64px; height: 64px;" 
+    target="_blank" 
+    rel="noopener noreferrer" 
+    aria-label="Fale conosco pelo WhatsApp">
+        <i class="fab fa-whatsapp text-3xl" aria-hidden="true"></i>
+    </a>
+
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="{{ asset('js/index.js') }}"></script>
+
+    <script>
+        const observer = new IntersectionObserver(entries=>{
+            entries.forEach(entry=>{
+                if(entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        },{threshold:0.1});
+        document.querySelectorAll('.fade-in').forEach(e=>observer.observe(e));
+        
+        const swiperClientes = new Swiper(".mySwiperClientes", {
+            slidesPerView: 1, 
+            spaceBetween: 20,
+            loop: true,
+            autoplay: {
+                delay: 4000,
+                disableOnInteraction: false,
+            },
+            breakpoints: {
+                768: {
+                    slidesPerView: 2, 
+                    spaceBetween: 30,
+                },
+                1024: {
+                    slidesPerView: 3, 
+                    spaceBetween: 40,
+                },
+            },
+        });
+
+        const hamburgerBtn = document.getElementById('hamburger-menu');
+        const navMenu = document.getElementById('nav-menu');
+
+        hamburgerBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        navMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
+        });
+
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

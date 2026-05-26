@@ -17,11 +17,21 @@
 
     <link rel="stylesheet" href="src/stylesheets/index.css">
 
-    <script>
-        tailwind.config = {
-            
+    <?php
+        require_once './src/scripts/conexao.php';
+    ?>
+
+    <?php
+        $db = getConexao();
+
+        if ($db) {
+            // $resultado = $db->query("SELECT * FROM tabela");
+            echo "<script>console.log(\"Dados carregados com sucesso!\")</script>";
+        } else {
+            // O banco falhou, mas o HTML acima e abaixo continua aparecendo
+            echo "<script>console.log(\"Não foi possível acessar o banco de dados no momento.\")</script>";
         }
-    </script>
+    ?>
 
     
 </head>

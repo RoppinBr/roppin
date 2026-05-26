@@ -16,10 +16,6 @@
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
 
     <link rel="stylesheet" href="{{ asset('css/index.css') }}">
-
-    <script>
-        console.log(asset('css/index.css'))
-    </script>
 </head>
 
 <body class="bg-gray-100 text-gray-800 scroll-smooth">

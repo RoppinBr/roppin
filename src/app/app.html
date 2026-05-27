@@ -1,46 +1,7 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roppin - Seu marketplace inteligente</title>
-
-    <link rel="icon" type="image/png" href="roppin_Logo.png">
-
-    <meta name="description" content="Roppin é o seu marketplace de serviços por geolocalização movido a IA. Encontre profissionais qualificados na sua região apenas dizendo o que precisa.">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
-    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
-
-    <link rel="stylesheet" href="src/stylesheets/index.css">
-
-    <?php
-        require_once './src/scripts/conexao.php';
-    ?>
-
-    <?php
-        $db = getConexao();
-
-        if ($db) {
-            // $resultado = $db->query("SELECT * FROM tabela");
-            echo "<script>console.log(\"Dados carregados com sucesso!\")</script>";
-        } else {
-            // O banco falhou, mas o HTML acima e abaixo continua aparecendo
-            echo "<script>console.log(\"Não foi possível acessar o banco de dados no momento.\")</script>";
-        }
-    ?>
-
-    
-</head>
-<body class="bg-gray-100 text-gray-800 scroll-smooth">
-
 <div id="auth-modal" class="modal-overlay">
     <div class="modal-content relative text-center">
         <!-- Botão Fechar -->
-        <button onclick="fecharModal()" class="absolute top-4 right-4 text-gray-500 hover:text-red-700 transition-colors">
+        <button type="button" (click)="fecharModal()" class="absolute top-4 right-4 text-gray-500 hover:text-red-700 transition-colors">
             <i class="fas fa-times text-xl"></i>
         </button>
 
@@ -59,7 +20,7 @@
             <button type="submit" class="bg-red-700 text-white px-6 py-3 rounded-full font-bold hover:bg-red-800 transition-colors button-animate">
                 Entrar
             </button>
-            <p class="text-gray-600 mt-4">Ainda não tem conta? <a href="#" onclick="alternarFormulario('cadastro')" class="text-red-700 font-bold hover:underline">Cadastre-se</a></p>
+            <p class="text-gray-600 mt-4">Ainda não tem conta? <a href="#" (click)="alternarFormulario('cadastro'); $event.preventDefault()" class="text-red-700 font-bold hover:underline">Cadastre-se</a></p>
         </form>
 
         <!-- Formulário de Cadastro -->
@@ -78,14 +39,14 @@
             <button type="submit" class="bg-gray-800 text-white px-6 py-3 rounded-full font-bold hover:bg-gray-900 transition-colors button-animate">
                 Criar Conta
             </button>
-            <p class="text-gray-600 mt-4">Já tem uma conta? <a href="#" onclick="alternarFormulario('login')" class="text-red-700 font-bold hover:underline">Faça Login</a></p>
+            <p class="text-gray-600 mt-4">Já tem uma conta? <a href="#" (click)="alternarFormulario('login'); $event.preventDefault()" class="text-red-700 font-bold hover:underline">Faça Login</a></p>
         </form>
     </div>
 </div>
 
 <nav class="hidden md:flex flex-col bg-red-700 text-white sidebar">
     <a href="#home" class="mb-10 mt-2">
-        <img src="images/roppin_Logo_circulo.png" alt="Logo da Roppin" class="h-20 w-20 mx-auto rounded-full object-cover">
+        <img src="/images/roppin_Logo_circulo.png" alt="Logo da Roppin" class="h-20 w-20 mx-auto rounded-full object-cover">
     </a>
     
     <ul class="flex flex-col space-y-4">
@@ -104,7 +65,7 @@
     </ul>
 
     <div class="mt-auto pt-6 border-t border-red-600">
-        <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-white text-red-700 px-4 py-2 rounded-full font-bold text-sm text-center block hover:bg-gray-200 button-animate w-full">
+        <button (click)="abrirModal()" class="bg-white text-red-700 px-4 py-2 rounded-full font-bold text-sm text-center block hover:bg-gray-200 button-animate w-full">
             Acessar Plataforma
         </button>
     </div>
@@ -113,11 +74,11 @@
 <header class="mobile-header bg-red-700 shadow md:hidden">
     <div class="container mx-auto flex justify-between items-center p-4">
         <a href="#home">
-            <img src="images/roppin_Logotipo.png" alt="Logo da Roppin" class="h-14 w-14 rounded-xl object-cover">
+            <img src="/images/roppin_Logotipo.png" alt="Logo da Roppin" class="h-14 w-14 rounded-xl object-cover">
         </a>
         
         <div class="flex items-center space-x-3"> 
-             <button onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white text-sm font-semibold px-3 py-1 rounded hover:bg-red-600 transition-colors">
+             <button (click)="abrirModal()" class="text-white text-sm font-semibold px-3 py-1 rounded hover:bg-red-600 transition-colors">
                  LOGIN
              </button>
              <button id="hamburger-menu" class="p-2 rounded-full text-white hover:bg-red-600 transition-colors">
@@ -138,7 +99,7 @@
 <main class="md:pl-64 pt-16 md:pt-0"> 
     
     <div id="desktop-top-bar" class="hidden md:flex justify-end items-center px-6 py-2 bg-white border-b border-gray-200 fixed top-0 left-64 right-0 z-40 shadow-sm">
-        <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-red-700 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-red-800 transition-colors">
+        <button (click)="abrirModal()" class="bg-red-700 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-red-800 transition-colors">
             <i class="fas fa-sign-in-alt mr-2"></i> ACESSAR ROSTER
         </button>
     </div>
@@ -146,7 +107,7 @@
     <!-- SEÇÃO HOME -->
     <section id="home"
         class="relative h-screen flex justify-center items-center text-center text-white bg-cover bg-center desktop-padding-top"
-        style="background-image: url('home.png');"
+        style="background-image: url('/images/home.png');"
         aria-label="Seção Inicial com Fundo Abstrato e Slogan da Roppin Marketplace">
         <div class="absolute inset-0 bg-red-800 opacity-80"></div>
         <div class="relative z-10 px-4 w-full max-w-4xl mx-auto">
@@ -158,13 +119,13 @@
             <!-- Barra de Busca IA -->
             <div class="mt-4 bg-white p-2 rounded-full flex flex-col md:flex-row items-center w-full shadow-2xl">
                 <input type="text" placeholder="O que você precisa hoje? (Ex: Preciso de uma faxina amanhã de manhã)" class="flex-grow w-full bg-transparent border-none focus:outline-none px-6 py-3 text-gray-800 text-base mb-2 md:mb-0 placeholder-gray-500">
-                <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-red-700 text-white w-full md:w-auto px-8 py-3 rounded-full font-bold hover:bg-red-800 transition-colors whitespace-nowrap flex justify-center items-center button-animate">
+                <button (click)="abrirModal()" class="bg-red-700 text-white w-full md:w-auto px-8 py-3 rounded-full font-bold hover:bg-red-800 transition-colors whitespace-nowrap flex justify-center items-center button-animate">
                     <i class="fas fa-sparkles mr-2"></i> Buscar com IA
                 </button>
             </div>
 
             <div class="mt-8">
-                <button onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white underline hover:text-gray-200 font-semibold transition-colors">
+                <button (click)="abrirModal()" class="text-white underline hover:text-gray-200 font-semibold transition-colors">
                     Sou profissional e quero prestar serviços
                 </button>
             </div>
@@ -208,7 +169,7 @@
             </div>
 
             <!-- Botão de Expandir -->
-            <button id="btn-expandir-sobre" onclick="toggleSobreExtra()" class="bg-transparent border-2 border-red-400 text-white px-8 py-3 rounded-full font-bold hover:bg-red-600 hover:border-red-600 transition-colors flex items-center justify-center mx-auto mb-4">
+            <button type="button" id="btn-expandir-sobre" (click)="toggleSobreExtra()" class="bg-transparent border-2 border-red-400 text-white px-8 py-3 rounded-full font-bold hover:bg-red-600 hover:border-red-600 transition-colors flex items-center justify-center mx-auto mb-4">
                 <span id="texto-btn-sobre">Conhecer nossa história e equipe</span>
                 <i id="icone-btn-sobre" class="fas fa-chevron-down ml-3"></i>
             </button>
@@ -245,7 +206,7 @@
                     <!-- CEO (Destaque) -->
                     <div class="flex justify-center mb-16">
                         <div class="flex flex-col items-center bg-red-800 p-6 rounded-2xl shadow-lg border border-red-600 w-full max-w-sm">
-                            <img src="images/CEO.jpeg" alt="Foto do CEO" class="w-32 h-32 rounded-full border-4 border-red-400 object-cover mb-4">
+                            <img src="/images/CEO.jpeg" alt="Foto do CEO" class="w-32 h-32 rounded-full border-4 border-red-400 object-cover mb-4">
                             <h4 class="text-xl font-bold text-white">João Moraes</h4>
                             <p class="text-red-300 font-bold tracking-wide text-sm mb-2">CEO</p>
                             <p class="text-xs text-red-200 mb-2 italic">"Visão estratégica e liderança executiva."</p>
@@ -257,7 +218,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
                         <!-- Template de Membro (Repita este bloco para cada um) -->
                         <div class="flex flex-col items-center bg-red-800 p-4 rounded-xl border border-red-600">
-                            <img src="images/CTO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
+                            <img src="/images/CTO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
                             <h4 class="text-sm font-bold text-white">Otávio Zampar</h4>
                             <p class="text-red-300 text-xs font-bold mb-1">CTO</p>
                             <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Responsável pela arquitetura de software e tecnologia.</p>
@@ -265,7 +226,7 @@
                         </div>
 
                         <div class="flex flex-col items-center bg-red-800 p-4 rounded-xl border border-red-600">
-                            <img src="images/CFO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
+                            <img src="/images/CFO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
                             <h4 class="text-sm font-bold text-white">Fernando Padula</h4>
                             <p class="text-red-300 text-xs font-bold mb-1">CFO</p>
                             <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Gestão financeira e planejamento orçamentário.</p>
@@ -273,7 +234,7 @@
                         </div>
 
                         <div class="flex flex-col items-center bg-red-800 p-4 rounded-xl border border-red-600">
-                            <img src="images/COO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
+                            <img src="/images/COO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
                             <h4 class="text-sm font-bold text-white">Gabriel Feliciano</h4>
                             <p class="text-red-300 text-xs font-bold mb-1">COO</p>
                             <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Operações, logística e eficiência do dia a dia.</p>
@@ -281,7 +242,7 @@
                         </div>
 
                         <div class="flex flex-col items-center bg-red-800 p-4 rounded-xl border border-red-600">
-                            <img src="images/CMO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
+                            <img src="/images/CMO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
                             <h4 class="text-sm font-bold text-white">Patrícia Amanda</h4>
                             <p class="text-red-300 text-xs font-bold mb-1">CMO</p>
                             <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Marketing, branding e aquisição de clientes.</p>
@@ -289,7 +250,7 @@
                         </div>
 
                         <div class="flex flex-col items-center bg-red-800 p-4 rounded-xl border border-red-600">
-                            <img src="images/CSO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
+                            <img src="/images/CSO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
                             <h4 class="text-sm font-bold text-white">Luiz Domingues</h4>
                             <p class="text-red-300 text-xs font-bold mb-1">CSO</p>
                             <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Vendas, expansão e relacionamento estratégico.</p>
@@ -309,25 +270,25 @@
                 <i class="fa-solid fa-broom text-red-700 text-4xl mb-4" aria-hidden="true"></i>
                 <h3 class="font-bold text-xl mb-2 text-gray-800">Limpeza Doméstica (Faxina)</h3>
                 <p class="text-gray-600">Profissionais verificados para limpeza pesada, diária ou pós-obra.</p>
-                <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+                <a (click)="abrirModal()" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
             </div>
             <div class="bg-white shadow-xl p-6 rounded-xl w-72 hover:shadow-2xl transition-all duration-300">
                 <i class="fa-solid fa-screwdriver-wrench text-red-700 text-4xl mb-4" aria-hidden="true"></i>
                 <h3 class="font-bold text-xl mb-2 text-gray-800">Reparos e Manutenção</h3>
                 <p class="text-gray-600">Eletricistas, encanadores e faz-tudo para pequenos e grandes reparos.</p>
-                <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+                <a (click)="abrirModal()" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
             </div>
             <div class="bg-white shadow-xl p-6 rounded-xl w-72 hover:shadow-2xl transition-all duration-300">
                 <i class="fa-solid fa-palette text-red-700 text-4xl mb-4" aria-hidden="true"></i>
                 <h3 class="font-bold text-xl mb-2 text-gray-800">Reforma e Pintura</h3>
                 <p class="text-gray-600">Pintores e pedreiros experientes para renovar sua casa ou apartamento.</p>
-                <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+                <a (click)="abrirModal()" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
             </div>
             <div class="bg-white shadow-xl p-6 rounded-xl w-72 hover:shadow-2xl transition-all duration-300">
                 <i class="fa-solid fa-dog text-red-700 text-4xl mb-4" aria-hidden="true"></i>
                 <h3 class="font-bold text-xl mb-2 text-gray-800">Pet Sitter e Cuidados</h3>
                 <p class="text-gray-600">Cuidadores de animais e passeadores na sua vizinhança.</p>
-                <a onclick="document.getElementById('auth-modal').style.display='flex'" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
+                <a (click)="abrirModal()" class="text-red-700 font-bold hover:underline mt-4 block cursor-pointer">Ver Profissionais</a>
             </div>
         </div>
         <a href="#contato" class="mt-12 inline-block bg-red-700 text-white px-8 py-4 rounded-full font-bold hover:bg-red-800 button-animate">Ver todas as Categorias</a>
@@ -421,7 +382,7 @@
     <footer class="bg-red-700 text-white text-center py-8 md:pl-64"> 
         <div class="container mx-auto px-4">
             <div class="flex flex-col md:flex-row justify-center items-center md:justify-between mb-4">
-                <div><img src="images/roppin_Logotipo.png" alt="Logo da Roppin" class="h-20 w-20 mx-auto md:mx-0 rounded-xl object-cover"></div> 
+                <div><img src="/images/roppin_Logotipo.png" alt="Logo da Roppin" class="h-20 w-20 mx-auto md:mx-0 rounded-xl object-cover"></div> 
                 <div class="flex space-x-6">
                     <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" class="text-white hover:text-red-300 transition-colors" aria-label="LinkedIn da Roppin">
                         <i class="fab fa-linkedin-in text-2xl" aria-hidden="true"></i>
@@ -458,107 +419,3 @@
    aria-label="Fale conosco pelo WhatsApp">
     <i class="fab fa-whatsapp text-3xl" aria-hidden="true"></i>
 </a>
-
-<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-
-<script>
-    const observer = new IntersectionObserver(entries=>{
-        entries.forEach(entry=>{
-            if(entry.isIntersecting) entry.target.classList.add('visible');
-        });
-    },{threshold:0.1});
-    document.querySelectorAll('.fade-in').forEach(e=>observer.observe(e));
-    
-    const swiperClientes = new Swiper(".mySwiperClientes", {
-        slidesPerView: 1, 
-        spaceBetween: 20,
-        loop: true,
-        autoplay: {
-            delay: 4000,
-            disableOnInteraction: false,
-        },
-        breakpoints: {
-            768: {
-                slidesPerView: 2, 
-                spaceBetween: 30,
-            },
-            1024: {
-                slidesPerView: 3, 
-                spaceBetween: 40,
-            },
-        },
-    });
-
-    const hamburgerBtn = document.getElementById('hamburger-menu');
-    const navMenu = document.getElementById('nav-menu');
-
-    hamburgerBtn.addEventListener('click', () => {
-        navMenu.classList.toggle('active');
-    });
-
-    navMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            navMenu.classList.remove('active');
-        });
-    });
-
-    document.getElementById('current-year').textContent = new Date().getFullYear();
-</script>
-
-<script>
-    function alternarFormulario(tipo) {
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const modalTitle = document.getElementById('modal-title');
-
-        if (tipo === 'cadastro') {
-            loginForm.classList.add('hidden');
-            registerForm.classList.remove('hidden');
-            modalTitle.innerText = "Criar Nova Conta";
-        } else {
-            registerForm.classList.add('hidden');
-            loginForm.classList.remove('hidden');
-            modalTitle.innerText = "Acessar Plataforma";
-        }
-    }
-
-    function fecharModal() {
-        document.getElementById('auth-modal').style.display = 'none';
-        alternarFormulario('login');
-    }
-</script>
-
-<script>
-    function toggleSobreExtra() {
-        const conteudo = document.getElementById('conteudo-extra-sobre');
-        const icone = document.getElementById('icone-btn-sobre');
-        const texto = document.getElementById('texto-btn-sobre');
-
-        if (conteudo.classList.contains('hidden')) {
-            // Mostrar
-            conteudo.classList.remove('hidden');
-            // Timeout curto para garantir que o display mude antes da transição de opacidade
-            setTimeout(() => {
-                conteudo.classList.remove('opacity-0');
-                conteudo.classList.add('opacity-100');
-            }, 50);
-            texto.textContent = "Ocultar detalhes";
-            icone.classList.replace('fa-chevron-down', 'fa-chevron-up');
-        } else {
-            // Esconder
-            conteudo.classList.remove('opacity-100');
-            conteudo.classList.add('opacity-0');
-            
-            // Aguarda a transição terminar para dar 'display: none'
-            setTimeout(() => {
-                conteudo.classList.add('hidden');
-            }, 500); // 500ms é o mesmo tempo do duration-500 do Tailwind
-            
-            texto.textContent = "Conhecer nossa história e equipe";
-            icone.classList.replace('fa-chevron-up', 'fa-chevron-down');
-        }
-    }
-</script>
-
-</body>
-</html>

@@ -1,3 +1,7 @@
+@import "tailwindcss";
+@source "./app/**/*.{html,ts}";
+@import "swiper/css";
+
 .fade-in { opacity:0; transform: translateY(40px); transition: all 0.8s ease-out; }
 .fade-in.visible { opacity:1; transform: translateY(0); }
 .button-animate { transition: all 0.3s ease; }
@@ -59,4 +63,8 @@ body {
 }
 .modal-content {
     background: white; padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+#home {
+    background-color: #991b1b;
 }

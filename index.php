@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roppin - Seu marketplace inteligente</title>
 
-    <link rel="icon" type="image/png" href="roppin_Logo.png">
+    <link rel="icon" type="image/png" href="images/roppin_Logo.png">
 
     <meta name="description" content="Roppin é o seu marketplace de serviços por geolocalização movido a IA. Encontre profissionais qualificados na sua região apenas dizendo o que precisa.">
 
@@ -18,21 +18,8 @@
     <link rel="stylesheet" href="src/stylesheets/index.css">
 
     <?php
-        require_once './src/scripts/conexao.php';
+        require_once './src/scripts/bd_control.php';
     ?>
-
-    <?php
-        $db = getConexao();
-
-        if ($db) {
-            // $resultado = $db->query("SELECT * FROM tabela");
-            echo "<script>console.log(\"Dados carregados com sucesso!\")</script>";
-        } else {
-            // O banco falhou, mas o HTML acima e abaixo continua aparecendo
-            echo "<script>console.log(\"Não foi possível acessar o banco de dados no momento.\")</script>";
-        }
-    ?>
-
     
 </head>
 <body class="bg-gray-100 text-gray-800 scroll-smooth">
@@ -64,15 +51,22 @@
 
         <!-- Formulário de Cadastro -->
         <form id="register-form" class="hidden flex flex-col space-y-4">
-            <div class="flex justify-center space-x-4 mb-2">
-                <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="tipo_usuario" value="cliente" checked class="mr-2 text-red-700 focus:ring-red-500"> Sou Cliente
-                </label>
-                <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="tipo_usuario" value="prestador" class="mr-2 text-red-700 focus:ring-red-500"> Sou Prestador
-                </label>
+            <div class="flex items-center justify-center space-x-2 mb-2 w-full text-gray-700">
+                <span class="font-medium text-base whitespace-nowrap">Sou</span>
+                <select name="tipo_usuario" class="flex-1 bg-white border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+                    <option value="cliente" selected>Cliente</option>
+                    <option value="prestador">Prestador</option>
+                </select>
             </div>
             <input type="text" placeholder="Nome Completo" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <div class="mb-2">
+                <input type="text" 
+                    id="documento" 
+                    name="documento" 
+                    placeholder="CPF ou CNPJ" 
+                    required 
+                    class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500 uppercase">
+            </div>
             <input type="email" placeholder="E-mail" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
             <input type="password" placeholder="Crie uma Senha" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
             <button type="submit" class="bg-gray-800 text-white px-6 py-3 rounded-full font-bold hover:bg-gray-900 transition-colors button-animate">
@@ -521,6 +515,41 @@
             modalTitle.innerText = "Acessar Plataforma";
         }
     }
+
+    const inputDoc = document.getElementById('documento');
+    const registerForm = document.getElementById('register-form');
+
+    inputDoc.addEventListener('input', (e) => {
+        let valor = e.target.value;
+        
+        // Remove tudo que não for letra ou número (limpa pontos, traços e barras antigos)
+        valor = valor.replace(/[^a-zA-Z0-9]/g, "");
+        
+        // Limita ao máximo de 14 caracteres puros (11 do CPF ou 14 do CNPJ)
+        if (valor.length > 14) {
+            valor = valor.slice(0, 14);
+        }
+        
+        // Aplica a máscara baseada na quantidade de caracteres
+        if (valor.length <= 11) {
+            // Máscara de CPF: AAA.AAA.AAA-AA (usando A para alfanumérico/letras e números)
+            valor = valor.replace(/^(\w{3})(\w)/, "$1.$2");
+            valor = valor.replace(/^(\w{3})\.(\w{3})(\w)/, "$1.$2.$3");
+            valor = valor.replace(/^(\w{3})\.(\w{3})\.(\w{3})(\w)/, "$1.$2.$3-$4");
+        } else {
+            // Máscara de CNPJ Alfanumérico: AA.AAA.AAA/0001-AA
+            valor = valor.replace(/^(\w{2})(\w)/, "$1.$2");
+            valor = valor.replace(/^(\w{2})\.(\w{3})(\w)/, "$1.$2.$3");
+            valor = valor.replace(/^(\w{2})\.(\w{3})\.(\w{3})(\w)/, "$1.$2.$3/$4");
+            valor = valor.replace(/^(\w{2})\.(\w{3})\.(\w{3})\/(\w{4})(\w)/, "$1.$2.$3/$4-$5");
+        }
+        
+        e.target.value = valor;
+    });
+
+    registerForm.addEventListener('submit', (e) => {
+        inputDoc.value = inputDoc.value.replace(/[^a-zA-Z0-9]/g, "");
+    });
 
     function fecharModal() {
         document.getElementById('auth-modal').style.display = 'none';

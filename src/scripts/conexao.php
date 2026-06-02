@@ -11,7 +11,8 @@ function getConexao() {
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
     try {
-        $conn = new mysqli($host, $user."1", $pass, $name);
+        $conn = new mysqli($host, $user, $pass, $name);
+        $conn->set_charset("utf8mb4");
         return $conn;
     } catch (mysqli_sql_exception $e) {
         // Log do erro internamente (arquivo de log)

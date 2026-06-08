@@ -1,3 +1,10 @@
+<?php
+    require_once './src/models/User.php';
+    
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -16,10 +23,6 @@
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
 
     <link rel="stylesheet" href="src/stylesheets/index.css">
-
-    <?php
-        require_once './src/scripts/bd_control.php';
-    ?>
     
 </head>
 <body class="bg-gray-100 text-gray-800 scroll-smooth">
@@ -33,10 +36,9 @@
 
         <h3 id="modal-title" class="text-2xl font-bold text-red-700 mb-6">Acessar Plataforma</h3>
         
-        <!-- Formulário de Login -->
         <form id="login-form" class="flex flex-col space-y-4">
-            <input type="email" placeholder="Seu E-mail" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
-            <input type="password" placeholder="Sua Senha" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <input type="email" name="email" placeholder="Seu E-mail" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <input type="password" name="senha" placeholder="Sua Senha" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
             <div class="flex justify-between items-center text-sm">
                 <label class="flex items-center text-gray-600">
                     <input type="checkbox" class="mr-2"> Lembrar-me
@@ -49,7 +51,6 @@
             <p class="text-gray-600 mt-4">Ainda não tem conta? <a href="#" onclick="alternarFormulario('cadastro')" class="text-red-700 font-bold hover:underline">Cadastre-se</a></p>
         </form>
 
-        <!-- Formulário de Cadastro -->
         <form id="register-form" class="hidden flex flex-col space-y-4">
             <div class="flex items-center justify-center space-x-2 mb-2 w-full text-gray-700">
                 <span class="font-medium text-base whitespace-nowrap">Sou</span>
@@ -58,17 +59,12 @@
                     <option value="prestador">Prestador</option>
                 </select>
             </div>
-            <input type="text" placeholder="Nome Completo" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <input type="text" name="nome" placeholder="Nome Completo" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
             <div class="mb-2">
-                <input type="text" 
-                    id="documento" 
-                    name="documento" 
-                    placeholder="CPF ou CNPJ" 
-                    required 
-                    class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500 uppercase">
+                <input type="text" id="documento" name="documento" placeholder="CPF ou CNPJ" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500 uppercase">
             </div>
-            <input type="email" placeholder="E-mail" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
-            <input type="password" placeholder="Crie uma Senha" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <input type="email" name="email" placeholder="E-mail" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <input type="password" name="senha" placeholder="Crie uma Senha" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
             <button type="submit" class="bg-gray-800 text-white px-6 py-3 rounded-full font-bold hover:bg-gray-900 transition-colors button-animate">
                 Criar Conta
             </button>
@@ -98,9 +94,37 @@
     </ul>
 
     <div class="mt-auto pt-6 border-t border-red-600">
-        <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-white text-red-700 px-4 py-2 rounded-full font-bold text-sm text-center block hover:bg-gray-200 button-animate w-full">
-            Acessar Plataforma
-        </button>
+        <?php 
+        // Verifica se a sessão existe e se realmente é um objeto
+        if (isset($_SESSION['usuario_logado']) && is_object($_SESSION['usuario_logado'])): 
+            $usuario = $_SESSION['usuario_logado'];
+            $nome = $usuario->getNome() ?? 'Usuário';
+        ?>
+            
+            <div class="bg-white rounded-lg p-3 flex items-center justify-between shadow-sm w-full">
+                <div class="flex items-center space-x-3">
+                    <!-- adicionar imagem posteriormente -->
+                    <div class="bg-red-100 text-red-700 rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                        <?php echo strtoupper(substr($nome, 0, 1)); ?>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-gray-800 truncate w-32" title="<?php echo htmlspecialchars($nome); ?>">
+                            <?php echo htmlspecialchars($nome); ?>
+                        </span>
+                        <a id="deslogar-a" class="text-xs text-red-600 hover:text-red-800 hover:underline text-left cursor-pointer">
+                            Sair / Deslogar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        <?php else: ?>
+            
+            <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-white text-red-700 px-4 py-2 rounded-full font-bold text-sm text-center block hover:bg-gray-200 button-animate w-full">
+                Acessar Plataforma
+            </button>
+
+        <?php endif; ?>
     </div>
 </nav>
 
@@ -131,11 +155,11 @@
 
 <main class="md:pl-64 pt-16 md:pt-0"> 
     
-    <div id="desktop-top-bar" class="hidden md:flex justify-end items-center px-6 py-2 bg-white border-b border-gray-200 fixed top-0 left-64 right-0 z-40 shadow-sm">
-        <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-red-700 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-red-800 transition-colors">
+    <!-- <div id="desktop-top-bar" class="hidden md:flex justify-end items-center px-6 py-2 bg-white border-b border-gray-200 fixed top-0 left-64 right-0 z-40 shadow-sm">
+        <button onclick="document.getElementById('auth-modal').style.display='flex'" class="hidden bg-red-700 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-red-800 transition-colors">
             <i class="fas fa-sign-in-alt mr-2"></i> ACESSAR ROSTER
         </button>
-    </div>
+    </div> -->
 
     <!-- SEÇÃO HOME -->
     <section id="home"
@@ -456,6 +480,56 @@
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 
 <script>
+    function mostrarNotificacao(mensagem, sucesso = true) {
+        const toast = document.createElement("div");
+        const corBg = sucesso ? "bg-green-600" : "bg-red-600"; // se sucesso verde se nao vermelho
+        toast.className = `fixed bottom-4 right-4 ${corBg} text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center space-x-3 transition-all duration-300 transform translate-y-10 opacity-0`;
+        const icone = sucesso ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
+        
+        toast.innerHTML = `
+            <span class="text-xl">${icone}</span>
+            <span class="font-medium">${mensagem}</span>
+        `;
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.remove("translate-y-10", "opacity-0");
+        }, 10);
+
+        setTimeout(() => {
+            toast.classList.add("translate-y-10", "opacity-0");
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    function toggleLoader(mostrar) {
+        let loader = document.getElementById("global-loader");
+
+        if (mostrar) {
+            if (!loader) {
+                loader = document.createElement("div");
+                loader.id = "global-loader";
+                
+                loader.className = "fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-3 rounded-lg shadow-xl z-50 flex items-center space-x-3 transition-opacity duration-200 opacity-0";
+                
+                loader.innerHTML = `
+                    <i class="fas fa-spinner animate-spin text-red-500 text-lg"></i>
+                    <span class="text-sm font-medium">Carregando...</span>
+                `;
+                
+                document.body.appendChild(loader);
+                
+                setTimeout(() => loader.classList.remove("opacity-0"), 10);
+            }
+        } else {
+            if (loader) {
+                loader.classList.add("opacity-0");
+                setTimeout(() => loader.remove(), 200);
+            }
+        }
+    }
+
     const observer = new IntersectionObserver(entries=>{
         entries.forEach(entry=>{
             if(entry.isIntersecting) entry.target.classList.add('visible');
@@ -497,9 +571,7 @@
     });
 
     document.getElementById('current-year').textContent = new Date().getFullYear();
-</script>
 
-<script>
     function alternarFormulario(tipo) {
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
@@ -555,18 +627,14 @@
         document.getElementById('auth-modal').style.display = 'none';
         alternarFormulario('login');
     }
-</script>
 
-<script>
     function toggleSobreExtra() {
         const conteudo = document.getElementById('conteudo-extra-sobre');
         const icone = document.getElementById('icone-btn-sobre');
         const texto = document.getElementById('texto-btn-sobre');
 
         if (conteudo.classList.contains('hidden')) {
-            // Mostrar
             conteudo.classList.remove('hidden');
-            // Timeout curto para garantir que o display mude antes da transição de opacidade
             setTimeout(() => {
                 conteudo.classList.remove('opacity-0');
                 conteudo.classList.add('opacity-100');
@@ -574,19 +642,147 @@
             texto.textContent = "Ocultar detalhes";
             icone.classList.replace('fa-chevron-down', 'fa-chevron-up');
         } else {
-            // Esconder
             conteudo.classList.remove('opacity-100');
             conteudo.classList.add('opacity-0');
-            
-            // Aguarda a transição terminar para dar 'display: none'
             setTimeout(() => {
                 conteudo.classList.add('hidden');
-            }, 500); // 500ms é o mesmo tempo do duration-500 do Tailwind
+            }, 500);
             
             texto.textContent = "Conhecer nossa história e equipe";
             icone.classList.replace('fa-chevron-up', 'fa-chevron-down');
         }
     }
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const notificacaoPendente = sessionStorage.getItem("notificacao_pos_reload");
+
+        if (notificacaoPendente) {
+            const dados = JSON.parse(notificacaoPendente);
+            mostrarNotificacao(dados.mensagem, dados.sucesso);
+            sessionStorage.removeItem("notificacao_pos_reload");
+        }
+        
+        const loginForm = document.getElementById("login-form");
+        if (loginForm) {
+            loginForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                formData.append("acao", "login");
+
+                toggleLoader(true);
+                fecharModal();
+
+                fetch("processar.php", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(dados => {
+                    toggleLoader(false);
+
+                    if (dados.sucesso) {
+                        sessionStorage.setItem("notificacao_pos_reload", JSON.stringify({
+                            mensagem: dados.mensagem,
+                            sucesso: dados.sucesso
+                        }));
+
+                        if (typeof fecharModal === "function") fecharModal(); 
+                        
+                        window.location.reload(); 
+                    } else {
+                        mostrarNotificacao(dados.mensagem, dados.sucesso);
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro:", error);
+                    toggleLoader(false);
+                    mostrarNotificacao("Ocorreu um erro ao tentar processar sua solicitação.", false);
+                });
+            });
+        }
+
+        const registerForm = document.getElementById("register-form");
+        if (registerForm) {
+            registerForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                formData.append("acao", "cadastro");
+
+                toggleLoader(true);
+                fecharModal();
+
+                fetch("processar.php", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(dados => {
+                    toggleLoader(false);
+
+                    if (dados.sucesso) {
+                        sessionStorage.setItem("notificacao_pos_reload", JSON.stringify({
+                            mensagem: dados.mensagem,
+                            sucesso: dados.sucesso
+                        }));
+
+                        if (typeof fecharModal === "function") fecharModal(); 
+                        
+                        window.location.reload(); 
+                    } else {
+                        mostrarNotificacao(dados.mensagem, dados.sucesso);
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro:", error);
+                    toggleLoader(false);
+                    mostrarNotificacao("Ocorreu um erro ao tentar realizar o cadastro.", false);
+                });
+            });
+        }
+
+        const deslogarA = document.getElementById("deslogar-a");
+        if (deslogarA){
+            deslogarA.addEventListener("click", function (e) {
+                toggleLoader(true);
+                fecharModal();
+
+                const formData = new FormData();
+                formData.append("acao", "logout");
+
+                fetch("processar.php", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(dados => {
+                    toggleLoader(false);
+                    
+                    if (dados.sucesso) {
+                        sessionStorage.setItem("notificacao_pos_reload", JSON.stringify({
+                            mensagem: dados.mensagem,
+                            sucesso: dados.sucesso
+                        }));
+
+                        if (typeof fecharModal === "function") fecharModal(); 
+                        
+                        window.location.reload(); 
+                    } else {
+                        mostrarNotificacao(dados.mensagem, dados.sucesso);
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro:", error);
+                    toggleLoader(false);
+                    mostrarNotificacao("Ocorreu um erro ao tentar sair.", false);
+                });
+            });
+        }
+
+    });
+
 </script>
 
 </body>

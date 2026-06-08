@@ -1,18 +1,21 @@
 <?php 
     require_once './src/scripts/conexao.php';
-    require_once './src/classes/User.php';
+    require_once './src/models/User.php';
 
     $db = getConexao();
 
-    if ($db) {
-        echo "<script>console.log(\"Dados carregados com sucesso!\")</script>";
-    } else {
-        echo "<script>console.log(\"Não foi possível acessar o banco de dados no momento.\")</script>";
+    if (!$db) {
+        error_log("bd_control.php -> Erro crítico: Não foi possível acessar o banco de dados.");
     }
 
     function getLogin(string $email, string $senha): false | User
     {
         global $db;
+
+        if (!$db) {
+            error_log("getLogin -> Tentativa de login sem conexão com o banco.");
+            return false;
+        }
 
         $stmt = $db->prepare("SELECT * FROM Usuario WHERE email = ? LIMIT 1");
         $stmt->bind_param("s", $email);
@@ -35,8 +38,14 @@
         return false;
     }
 
-    function createUser(string $nome, string $cpf, string $email, string $senha): false | User{
+    function createUser(string $nome, string $cpf, string $email, string $senha): false | User
+    {
         global $db;
+
+        if (!$db) {
+            error_log("createUser -> Tentativa de cadastro sem conexão com o banco.");
+            return false;
+        }
 
         $hashSenha = password_hash($senha, PASSWORD_DEFAULT); # Em BCRIPT
 
@@ -64,5 +73,5 @@
         return false;
     }
 
-    createUser("Otávio Custódio Zampar", "11111111111", "otavio.zampar@aluno.cps.sp.gov.br", "teste123");
+    // createUser("Otávio Custódio Zampar", "11111111111", "otavio.zampar@aluno.cps.sp.gov.br", "teste123");
 ?>

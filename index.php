@@ -278,7 +278,7 @@
                             <img src="images/CTO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
                             <h4 class="text-sm font-bold text-white">Otávio Zampar</h4>
                             <p class="text-red-300 text-xs font-bold mb-1">CTO</p>
-                            <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Responsável pela arquitetura de software e tecnologia.</p>
+                            <p class="text-[10px] text-red-200 text-center mb-2 leading-tight">Responsável pela arquitetura de software e tecnologia.</p>
                             <a href="mailto:otavio.zampar@fatec.sp.gov.br" class="break-all text-[10px] text-white underline">otavio.zampar@fatec.sp.gov.br</a>
                         </div>
 
@@ -286,7 +286,7 @@
                             <img src="images/CFO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
                             <h4 class="text-sm font-bold text-white">Fernando Padula</h4>
                             <p class="text-red-300 text-xs font-bold mb-1">CFO</p>
-                            <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Gestão financeira e planejamento orçamentário.</p>
+                            <p class=" text-[10px] text-red-200 text-center mb-2 leading-tight">Gestão financeira e planejamento orçamentário.</p>
                             <a href="mailto:fernando.padula@fatec.sp.gov.br" class="break-all text-[10px] text-white underline">fernando.padula@fatec.sp.gov.br</a>
                         </div>
 
@@ -294,7 +294,7 @@
                             <img src="images/COO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
                             <h4 class="text-sm font-bold text-white">Gabriel Feliciano</h4>
                             <p class="text-red-300 text-xs font-bold mb-1">COO</p>
-                            <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Operações, logística e eficiência do dia a dia.</p>
+                            <p class="text-[10px] text-red-200 text-center mb-2 leading-tight">Operações, logística e eficiência do dia a dia.</p>
                             <a href="mailto:gabriel.feliciano@fatec.sp.gov.br" class="break-all text-[10px] text-white underline">gabriel.feliciano@fatec.sp.gov.br</a>
                         </div>
 
@@ -302,7 +302,7 @@
                             <img src="images/CMO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
                             <h4 class="text-sm font-bold text-white">Patrícia Amanda</h4>
                             <p class="text-red-300 text-xs font-bold mb-1">CMO</p>
-                            <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Marketing, branding e aquisição de clientes.</p>
+                            <p class="text-[10px] text-red-200 text-center mb-2 leading-tight">Marketing, branding e aquisição de clientes.</p>
                             <a href="mailto:patricia.pereira11@fatec.sp.gov.br" class="break-all text-[10px] text-white underline">patricia.pereira11@fatec.sp.gov.br</a>
                         </div>
 
@@ -310,7 +310,7 @@
                             <img src="images/CSO.jpeg" alt="Foto" class="w-20 h-20 rounded-full border-2 border-red-500 object-cover mb-3">
                             <h4 class="text-sm font-bold text-white">Luiz Domingues</h4>
                             <p class="text-red-300 text-xs font-bold mb-1">CSO</p>
-                            <p class="break-all text-[10px] text-red-200 text-center mb-2 leading-tight">Vendas, expansão e relacionamento estratégico.</p>
+                            <p class="text-[10px] text-red-200 text-center mb-2 leading-tight">Vendas, expansão e relacionamento estratégico.</p>
                             <a href="mailto:luiz.domingues4@fatec.sp.gov.br" class="break-all text-[10px] text-white underline">luiz.domingues4@fatec.sp.gov.br</a>
                         </div>
                     </div>

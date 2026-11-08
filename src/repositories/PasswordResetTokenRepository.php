@@ -92,6 +92,10 @@ class PasswordResetTokenRepository extends BaseRepository
                 return false;
             }
 
+            $removerRememberMe = $this->db->prepare('DELETE FROM RememberMeTokens WHERE usuario_id = ?');
+            $removerRememberMe->bind_param('i', $reset['usuario_id']);
+            $removerRememberMe->execute();
+
             $remover = $this->db->prepare('DELETE FROM PasswordResetTokens WHERE usuario_id = ?');
             $remover->bind_param('i', $reset['usuario_id']);
             $remover->execute();

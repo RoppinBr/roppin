@@ -1,9 +1,6 @@
 <?php
-    require_once './src/models/User.php';
-    
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+require_once __DIR__ . '/src/scripts/auth_session.php';
+startRoppinSession();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -46,7 +43,7 @@
             </div>
             <div class="flex justify-between items-center text-sm">
                 <label class="flex items-center text-gray-600">
-                    <input type="checkbox" class="mr-2"> Lembrar-me
+                    <input type="checkbox" name="lembrar_me" value="1" class="mr-2"> Lembrar-me
                 </label>
                 <a href="#" id="forgot-password-link" class="text-red-700 hover:underline">Esqueceu a senha?</a>
             </div>
@@ -209,15 +206,21 @@
             <!-- Barra de Busca IA -->
             <div class="mt-4 flex w-full items-center gap-2 rounded-xl bg-white p-2 shadow-2xl md:rounded-full">
                 <input type="text" placeholder="O que você precisa?" aria-label="O que você precisa hoje?" class="min-w-0 flex-1 bg-transparent border-none focus:outline-none px-3 py-3 text-gray-800 text-base placeholder-gray-500">
-                <button type="button" title="Buscar com IA" aria-label="Buscar com IA" onclick="document.getElementById('auth-modal').style.display='flex'" class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-red-700 text-white font-bold hover:bg-red-800 transition-colors button-animate md:w-auto md:rounded-full md:px-6">
+                <button id="ai-search-button" type="button" title="Buscar com IA" aria-label="Buscar com IA" class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-red-700 text-white font-bold hover:bg-red-800 transition-colors button-animate md:w-auto md:rounded-full md:px-6">
                     <i class="fas fa-magnifying-glass md:mr-2" aria-hidden="true"></i><span class="hidden md:inline">Buscar com IA</span>
                 </button>
             </div>
 
             <div class="mt-8">
-                <button onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white underline hover:text-gray-200 font-semibold transition-colors">
+                <?php if (isset($_SESSION['usuario_logado']) && $_SESSION['usuario_logado'] instanceof User): ?>
+                <a href="src/pages/conta.php?aba=prestador" class="text-white underline hover:text-gray-200 font-semibold transition-colors">
+                    Sou profissional e quero prestar serviços
+                </a>
+                <?php else: ?>
+                <button type="button" onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white underline hover:text-gray-200 font-semibold transition-colors">
                     Sou profissional e quero prestar serviços
                 </button>
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -718,6 +721,36 @@
             mostrarNotificacao(dados.mensagem, dados.sucesso);
             sessionStorage.removeItem("notificacao_pos_reload");
         }
+
+        const aiSearchButton = document.getElementById('ai-search-button');
+        const aiSearchInput = document.querySelector('#home input[aria-label="O que você precisa hoje?"]');
+        aiSearchButton.addEventListener('click', async () => {
+            toggleLoader(true);
+            try {
+                const formData = new FormData();
+                formData.append('acao', 'listar_especialidades');
+                const response = await fetch('processar.php', { method: 'POST', body: formData });
+                const dados = await response.json();
+
+                if (!response.ok || !dados.sucesso) {
+                    window.alert('Não foi possível carregar as especialidades agora.');
+                    return;
+                }
+
+                const busca = aiSearchInput.value.trim().toLocaleLowerCase('pt-BR');
+                const encontradas = dados.especialidades.filter((especialidade) =>
+                    especialidade.nomeEspecialidade.toLocaleLowerCase('pt-BR').includes(busca)
+                );
+                const resultado = encontradas.length
+                    ? `Especialidades disponíveis:\n\n${encontradas.map((especialidade) => `• ${especialidade.nomeEspecialidade}`).join('\n')}`
+                    : 'Nenhuma especialidade encontrada para essa busca.';
+                window.alert(resultado);
+            } catch (error) {
+                window.alert('Não foi possível carregar as especialidades agora.');
+            } finally {
+                toggleLoader(false);
+            }
+        });
 
         const forgotPasswordLink = document.getElementById('forgot-password-link');
         forgotPasswordLink.addEventListener('click', (event) => {

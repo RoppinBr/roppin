@@ -14,10 +14,6 @@ class SpecialtyController
 
     public function index(array $input = []): ControllerResponse
     {
-        if (!$this->authenticatedUser()) {
-            return new ControllerResponse(['sucesso' => false, 'mensagem' => 'Faça login para continuar.'], 401);
-        }
-
         $specialties = array_map(static fn(Specialty $specialty): array => $specialty->toArray(), $this->specialties->findAll());
         return new ControllerResponse(['sucesso' => true, 'especialidades' => $specialties]);
     }

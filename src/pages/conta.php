@@ -1,9 +1,6 @@
 <?php
-require_once __DIR__ . '/../models/User.php';
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/../scripts/auth_session.php';
+startRoppinSession();
 
 if (!isset($_SESSION['usuario_logado']) || !($_SESSION['usuario_logado'] instanceof User)) {
     header('Location: ../../index.php');
@@ -265,6 +262,14 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
                 activateTab(nextIndex, true);
             });
         });
+
+        const requestedTab = new URLSearchParams(window.location.search).get('aba');
+        if (requestedTab === 'prestador') {
+            const providerTabIndex = accountTabs.findIndex((tab) => tab.id === 'tab-provider');
+            if (providerTabIndex !== -1) {
+                activateTab(providerTabIndex);
+            }
+        }
 
         function setInlineMessage(element, message, success = false) {
             element.textContent = message;

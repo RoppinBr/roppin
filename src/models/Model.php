@@ -29,6 +29,15 @@ abstract class Model
         return $this->attributes[$field] ?? null;
     }
 
+    public function set(string $field, mixed $value): void
+    {
+        if (!in_array($field, static::fields(), true)) {
+            throw new InvalidArgumentException('Campo não definido para este model.');
+        }
+
+        $this->attributes[$field] = $value;
+    }
+
     public function toArray(): array
     {
         return $this->attributes;

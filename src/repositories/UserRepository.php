@@ -4,7 +4,7 @@ require_once __DIR__ . '/../models/User.php';
 
 class UserRepository extends BaseRepository
 {
-    private const USER_FIELDS = 'idUsuario AS id, idPessoa, tipoPessoa, cpf, nome, cnpj, razaoSocial, email, senha, media_reputacao';
+    private const USER_FIELDS = 'idUsuario, idPessoa, tipoPessoa, cpf, nome, cnpj, razaoSocial, email, senha, media_reputacao';
 
     public function findById(int $id): User | false
     {

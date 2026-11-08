@@ -43,12 +43,21 @@
                 <label class="flex items-center text-gray-600">
                     <input type="checkbox" class="mr-2"> Lembrar-me
                 </label>
-                <a href="#" class="text-red-700 hover:underline">Esqueceu a senha?</a>
+                <a href="#" id="forgot-password-link" class="text-red-700 hover:underline">Esqueceu a senha?</a>
             </div>
             <button type="submit" class="bg-red-700 text-white px-6 py-3 rounded-full font-bold hover:bg-red-800 transition-colors button-animate">
                 Entrar
             </button>
             <p class="text-gray-600 mt-4">Ainda não tem conta? <a href="#" onclick="alternarFormulario('cadastro')" class="text-red-700 font-bold hover:underline">Cadastre-se</a></p>
+        </form>
+
+        <form id="forgot-password-form" class="hidden flex flex-col space-y-4">
+            <p class="text-sm text-gray-600">Informe o CPF cadastrado. Enviaremos um link de recuperação para o e-mail da conta.</p>
+            <input type="text" name="cpf" placeholder="CPF ou CNPJ" autocomplete="off" required maxlength="18" class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <button type="submit" class="bg-red-700 text-white px-6 py-3 rounded-full font-bold hover:bg-red-800 transition-colors button-animate">
+                Enviar link de recuperação
+            </button>
+            <p class="text-gray-600 mt-4">Lembrou sua senha? <a href="#" onclick="alternarFormulario('login')" class="text-red-700 font-bold hover:underline">Voltar ao login</a></p>
         </form>
 
         <form id="register-form" class="hidden flex flex-col space-y-4">
@@ -101,23 +110,22 @@
             $nome = $usuario->getNome() ?? 'Usuário';
         ?>
             
-            <div class="bg-white rounded-lg p-3 flex items-center justify-between shadow-sm w-full">
-                <div class="flex items-center space-x-3">
-                    <!-- adicionar imagem posteriormente -->
-                    <div class="bg-red-100 text-red-700 rounded-full w-8 h-8 flex items-center justify-center font-bold">
-                        <?php echo strtoupper(substr($nome, 0, 1)); ?>
-                    </div>
-                    <div class="flex min-w-0 flex-1 items-center gap-2">
-                        <span class="min-w-0 flex-1 truncate text-sm font-bold text-gray-800" title="<?php echo htmlspecialchars($nome); ?>">
-                            <?php echo htmlspecialchars($nome); ?>
-                        </span>
-                        <a href="src/pages/conta.php" title="Editar cadastro" aria-label="Editar cadastro" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-700 transition-colors hover:bg-red-100 hover:text-red-900">
-                            <i class="fas fa-user-pen" aria-hidden="true"></i>
-                        </a>
-                        <button id="deslogar-a" type="button" title="Sair" aria-label="Sair" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-700 transition-colors hover:bg-red-100 hover:text-red-900">
-                            <i class="fas fa-right-from-bracket" aria-hidden="true"></i>
-                        </button>
-                    </div>
+            <div class="bg-white rounded-lg p-3 flex items-center justify-between shadow-sm w-full gap-3">
+                <div class="bg-red-100 text-red-700 rounded-full w-8 h-8 shrink-0 flex items-center justify-center font-bold">
+                    <?php echo strtoupper(substr($nome, 0, 1)); ?>
+                </div>
+
+                <span class="min-w-0 flex-1 truncate text-sm font-bold text-gray-800" title="<?php echo htmlspecialchars($nome); ?>">
+                    <?php echo htmlspecialchars($nome); ?>
+                </span>
+
+                <div class="flex shrink-0 items-center gap-1">
+                    <a href="src/pages/conta.php" title="Editar cadastro" aria-label="Editar cadastro" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-700 transition-colors hover:bg-red-100 hover:text-red-900">
+                        <i class="fas fa-user-pen" aria-hidden="true"></i>
+                    </a>
+                    <button type="button" title="Sair" aria-label="Sair" class="js-logout-button inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-700 transition-colors hover:bg-red-100 hover:text-red-900">
+                        <i class="fas fa-right-from-bracket" aria-hidden="true"></i>
+                    </button>
                 </div>
             </div>
 
@@ -139,7 +147,20 @@
         
         <div class="flex items-center space-x-3"> 
              <?php if (isset($_SESSION['usuario_logado']) && $_SESSION['usuario_logado'] instanceof User): ?>
-                 <a href="src/pages/conta.php" class="text-white text-sm font-semibold px-3 py-1 rounded hover:bg-red-600 transition-colors">MINHA CONTA</a>
+                 <div id="mobile-account-dropdown" class="relative">
+                     <button id="mobile-account-toggle" type="button" aria-expanded="false" aria-controls="mobile-account-menu" class="inline-flex max-w-[42vw] items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-white">
+                         <span class="truncate"><?php echo htmlspecialchars($nome); ?></span>
+                         <i class="fas fa-chevron-down shrink-0 text-xs" aria-hidden="true"></i>
+                     </button>
+                     <div id="mobile-account-menu" class="absolute right-0 top-full z-50 mt-2 hidden w-48 overflow-hidden rounded-lg bg-white py-1 text-left shadow-lg ring-1 ring-black/10">
+                         <a href="src/pages/conta.php" role="menuitem" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-800 hover:bg-red-50 hover:text-red-700">
+                             <i class="fas fa-user-pen w-4 text-center" aria-hidden="true"></i> Editar cadastro
+                         </a>
+                         <button type="button" role="menuitem" class="js-logout-button flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-red-50 hover:text-red-700">
+                             <i class="fas fa-right-from-bracket w-4 text-center" aria-hidden="true"></i> Sair
+                         </button>
+                     </div>
+                 </div>
              <?php else: ?>
                  <button onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white text-sm font-semibold px-3 py-1 rounded hover:bg-red-600 transition-colors">
                      LOGIN
@@ -181,10 +202,10 @@
             </p>
             
             <!-- Barra de Busca IA -->
-            <div class="mt-4 bg-white p-2 rounded-full flex flex-col md:flex-row items-center w-full shadow-2xl">
-                <input type="text" placeholder="O que você precisa hoje? (Ex: Preciso de uma faxina amanhã de manhã)" class="flex-grow w-full bg-transparent border-none focus:outline-none px-6 py-3 text-gray-800 text-base mb-2 md:mb-0 placeholder-gray-500">
-                <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-red-700 text-white w-full md:w-auto px-8 py-3 rounded-full font-bold hover:bg-red-800 transition-colors whitespace-nowrap flex justify-center items-center button-animate">
-                    <i class="fas fa-sparkles mr-2"></i> Buscar com IA
+            <div class="mt-4 flex w-full items-center gap-2 rounded-xl bg-white p-2 shadow-2xl md:rounded-full">
+                <input type="text" placeholder="O que você precisa?" aria-label="O que você precisa hoje?" class="min-w-0 flex-1 bg-transparent border-none focus:outline-none px-3 py-3 text-gray-800 text-base placeholder-gray-500">
+                <button type="button" title="Buscar com IA" aria-label="Buscar com IA" onclick="document.getElementById('auth-modal').style.display='flex'" class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-red-700 text-white font-bold hover:bg-red-800 transition-colors button-animate md:w-auto md:rounded-full md:px-6">
+                    <i class="fas fa-magnifying-glass md:mr-2" aria-hidden="true"></i><span class="hidden md:inline">Buscar com IA</span>
                 </button>
             </div>
 
@@ -567,6 +588,33 @@
     const hamburgerBtn = document.getElementById('hamburger-menu');
     const navMenu = document.getElementById('nav-menu');
 
+    const accountDropdown = document.getElementById('mobile-account-dropdown');
+    if (accountDropdown) {
+        const accountToggle = document.getElementById('mobile-account-toggle');
+        const accountMenu = document.getElementById('mobile-account-menu');
+
+        accountToggle.addEventListener('click', () => {
+            const abrir = accountToggle.getAttribute('aria-expanded') !== 'true';
+            accountToggle.setAttribute('aria-expanded', String(abrir));
+            accountMenu.classList.toggle('hidden', !abrir);
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!accountDropdown.contains(event.target)) {
+                accountToggle.setAttribute('aria-expanded', 'false');
+                accountMenu.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                accountToggle.setAttribute('aria-expanded', 'false');
+                accountMenu.classList.add('hidden');
+                accountToggle.focus();
+            }
+        });
+    }
+
     hamburgerBtn.addEventListener('click', () => {
         navMenu.classList.toggle('active');
     });
@@ -582,17 +630,13 @@
     function alternarFormulario(tipo) {
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
+        const recoveryForm = document.getElementById('forgot-password-form');
         const modalTitle = document.getElementById('modal-title');
 
-        if (tipo === 'cadastro') {
-            loginForm.classList.add('hidden');
-            registerForm.classList.remove('hidden');
-            modalTitle.innerText = "Criar Nova Conta";
-        } else {
-            registerForm.classList.add('hidden');
-            loginForm.classList.remove('hidden');
-            modalTitle.innerText = "Acessar Plataforma";
-        }
+        loginForm.classList.toggle('hidden', tipo !== 'login');
+        registerForm.classList.toggle('hidden', tipo !== 'cadastro');
+        recoveryForm.classList.toggle('hidden', tipo !== 'recuperacao');
+        modalTitle.innerText = tipo === 'cadastro' ? "Criar Nova Conta" : (tipo === 'recuperacao' ? "Recuperar senha" : "Acessar Plataforma");
     }
 
     const inputDoc = document.getElementById('documento');
@@ -669,6 +713,30 @@
             mostrarNotificacao(dados.mensagem, dados.sucesso);
             sessionStorage.removeItem("notificacao_pos_reload");
         }
+
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        forgotPasswordLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            alternarFormulario('recuperacao');
+        });
+
+        const recoveryForm = document.getElementById('forgot-password-form');
+        recoveryForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(recoveryForm);
+            formData.append('acao', 'solicitar_recuperacao');
+            toggleLoader(true);
+
+            try {
+                const response = await fetch('processar.php', { method: 'POST', body: formData });
+                const dados = await response.json();
+                mostrarNotificacao(dados.mensagem, dados.sucesso);
+            } catch (error) {
+                mostrarNotificacao('Não foi possível solicitar a recuperação agora.', false);
+            } finally {
+                toggleLoader(false);
+            }
+        });
         
         const loginForm = document.getElementById("login-form");
         if (loginForm) {
@@ -750,9 +818,8 @@
             });
         }
 
-        const deslogarA = document.getElementById("deslogar-a");
-        if (deslogarA){
-            deslogarA.addEventListener("click", function (e) {
+        document.querySelectorAll(".js-logout-button").forEach((deslogarA) => {
+            deslogarA.addEventListener("click", function () {
                 toggleLoader(true);
                 fecharModal();
 
@@ -786,7 +853,7 @@
                     mostrarNotificacao("Ocorreu um erro ao tentar sair.", false);
                 });
             });
-        }
+        });
 
     });
 

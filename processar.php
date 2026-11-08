@@ -4,6 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once './src/scripts/bd_control.php';
+require_once './src/scripts/password_reset_mailer.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
@@ -51,6 +52,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['sucesso' => true, 'mensagem' => 'Conta criada com sucesso!']);
         } else {
             echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao criar conta. Verifique se o CPF ou E-mail já existem.']);
+        }
+        exit;
+    }
+
+    // ---- AÇÕES: RECUPERAÇÃO DE SENHA ----
+    if ($acao === 'solicitar_recuperacao') {
+        $cpf = strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', trim($_POST['cpf'] ?? '')));
+        $recuperacao = $cpf !== '' ? createPasswordReset($cpf) : false;
+
+        if (is_array($recuperacao) && empty($recuperacao['limitado'])) {
+            $appUrl = rtrim(trim((string) getenv('APP_URL')), '/');
+            $esquema = strtolower((string) parse_url($appUrl, PHP_URL_SCHEME));
+
+            if ($appUrl !== '' && filter_var($appUrl, FILTER_VALIDATE_URL) && in_array($esquema, ['http', 'https'], true)) {
+                $resetUrl = $appUrl . '/src/pages/redefinir_senha.php?token=' . rawurlencode($recuperacao['token']);
+
+                if (!sendPasswordResetEmail($recuperacao['email'], $recuperacao['nome'], $resetUrl)) {
+                    invalidatePasswordReset($recuperacao['token']);
+                }
+            } else {
+                error_log('solicitar_recuperacao -> APP_URL não está configurada como uma URL http ou https válida.');
+                invalidatePasswordReset($recuperacao['token']);
+            }
+        }
+
+        echo json_encode(['sucesso' => true, 'mensagem' => 'Se o CPF estiver cadastrado, enviaremos um link de recuperação para o e-mail da conta.']);
+        exit;
+    }
+
+    if ($acao === 'redefinir_senha') {
+        $token = trim($_POST['token'] ?? '');
+        $senha = $_POST['senha'] ?? '';
+
+        if (!preg_match('/^[a-f0-9]{64}$/i', $token) || strlen($senha) < 8) {
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Link inválido ou expirado. Solicite uma nova recuperação.']);
+            exit;
+        }
+
+        if (resetPasswordWithToken($token, $senha)) {
+            echo json_encode(['sucesso' => true, 'mensagem' => 'Senha redefinida. Você já pode entrar com a nova senha.']);
+        } else {
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Link inválido ou expirado. Solicite uma nova recuperação.']);
         }
         exit;
     }

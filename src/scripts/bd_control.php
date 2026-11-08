@@ -129,5 +129,169 @@
         return false;
     }
 
+    function ensurePasswordResetTable(): bool
+    {
+        global $db;
+
+        if (!$db) {
+            return false;
+        }
+
+        try {
+            $db->query("CREATE TABLE IF NOT EXISTS PasswordResetTokens (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                usuario_id BIGINT UNSIGNED NOT NULL,
+                token_hash CHAR(64) NOT NULL,
+                criado_em DATETIME NOT NULL,
+                expira_em DATETIME NOT NULL,
+                PRIMARY KEY (id),
+                UNIQUE KEY uq_password_reset_token_hash (token_hash),
+                KEY idx_password_reset_user_created (usuario_id, criado_em)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            return true;
+        } catch (mysqli_sql_exception $e) {
+            error_log("ensurePasswordResetTable -> Erro de banco: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    function createPasswordReset(string $cpf): array | false
+    {
+        global $db;
+
+        if (!$db || !ensurePasswordResetTable()) {
+            return false;
+        }
+
+        $transacaoIniciada = false;
+
+        try {
+            $stmt = $db->prepare("SELECT id, nome, email FROM Usuario WHERE cpf = ? LIMIT 1");
+            $stmt->bind_param("s", $cpf);
+            $stmt->execute();
+            $usuario = $stmt->get_result()->fetch_assoc();
+
+            if (!$usuario) {
+                return false;
+            }
+
+            $limite = $db->prepare("SELECT id FROM PasswordResetTokens WHERE usuario_id = ? AND criado_em > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 MINUTE) LIMIT 1");
+            $limite->bind_param("i", $usuario['id']);
+            $limite->execute();
+
+            if ($limite->get_result()->fetch_assoc()) {
+                return ['limitado' => true];
+            }
+
+            $db->begin_transaction();
+            $transacaoIniciada = true;
+            $remover = $db->prepare("DELETE FROM PasswordResetTokens WHERE usuario_id = ?");
+            $remover->bind_param("i", $usuario['id']);
+            $remover->execute();
+
+            $token = bin2hex(random_bytes(32));
+            $tokenHash = hash('sha256', $token);
+            $inserir = $db->prepare("INSERT INTO PasswordResetTokens (usuario_id, token_hash, criado_em, expira_em) VALUES (?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL 30 MINUTE))");
+            $inserir->bind_param("is", $usuario['id'], $tokenHash);
+            $inserir->execute();
+            $db->commit();
+            $transacaoIniciada = false;
+
+            return [
+                'email' => $usuario['email'],
+                'nome' => $usuario['nome'],
+                'token' => $token,
+                'limitado' => false
+            ];
+        } catch (mysqli_sql_exception $e) {
+            if ($transacaoIniciada) {
+                $db->rollback();
+            }
+            error_log("createPasswordReset -> Erro de banco: " . $e->getMessage());
+        } catch (Throwable $e) {
+            if ($transacaoIniciada) {
+                $db->rollback();
+            }
+            error_log("createPasswordReset -> Erro: " . $e->getMessage());
+        }
+
+        return false;
+    }
+
+    function invalidatePasswordReset(string $token): void
+    {
+        global $db;
+
+        if (!$db || !ensurePasswordResetTable()) {
+            return;
+        }
+
+        try {
+            $tokenHash = hash('sha256', $token);
+            $stmt = $db->prepare("DELETE FROM PasswordResetTokens WHERE token_hash = ?");
+            $stmt->bind_param("s", $tokenHash);
+            $stmt->execute();
+        } catch (mysqli_sql_exception $e) {
+            error_log("invalidatePasswordReset -> Erro de banco: " . $e->getMessage());
+        }
+    }
+
+    function resetPasswordWithToken(string $token, string $senha): bool
+    {
+        global $db;
+
+        if (!$db || !ensurePasswordResetTable()) {
+            return false;
+        }
+
+        $transacaoIniciada = false;
+
+        try {
+            $tokenHash = hash('sha256', $token);
+            $db->begin_transaction();
+            $transacaoIniciada = true;
+
+            $consulta = $db->prepare("SELECT usuario_id FROM PasswordResetTokens WHERE token_hash = ? AND expira_em > UTC_TIMESTAMP() FOR UPDATE");
+            $consulta->bind_param("s", $tokenHash);
+            $consulta->execute();
+            $reset = $consulta->get_result()->fetch_assoc();
+
+            if (!$reset) {
+                $db->rollback();
+                return false;
+            }
+
+            $hashSenha = password_hash($senha, PASSWORD_DEFAULT);
+            $atualizar = $db->prepare("UPDATE Usuario SET senha = ? WHERE id = ?");
+            $atualizar->bind_param("si", $hashSenha, $reset['usuario_id']);
+            $atualizar->execute();
+
+            if ($atualizar->affected_rows !== 1) {
+                $db->rollback();
+                return false;
+            }
+
+            $remover = $db->prepare("DELETE FROM PasswordResetTokens WHERE usuario_id = ?");
+            $remover->bind_param("i", $reset['usuario_id']);
+            $remover->execute();
+            $db->commit();
+            $transacaoIniciada = false;
+
+            return true;
+        } catch (mysqli_sql_exception $e) {
+            if ($transacaoIniciada) {
+                $db->rollback();
+            }
+            error_log("resetPasswordWithToken -> Erro de banco: " . $e->getMessage());
+        } catch (Throwable $e) {
+            if ($transacaoIniciada) {
+                $db->rollback();
+            }
+            error_log("resetPasswordWithToken -> Erro: " . $e->getMessage());
+        }
+
+        return false;
+    }
+
     // createUser("Otávio Custódio Zampar", "11111111111", "otavio.zampar@aluno.cps.sp.gov.br", "teste123");
 ?>

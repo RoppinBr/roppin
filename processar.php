@@ -1,9 +1,6 @@
 <?php
-require_once __DIR__ . '/src/models/User.php';
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/src/scripts/auth_session.php';
+startRoppinSession();
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -40,6 +37,7 @@ if (!isset($rotas[$acao])) {
 
 require_once __DIR__ . '/src/scripts/conexao.php';
 require_once __DIR__ . '/src/repositories/UserRepository.php';
+require_once __DIR__ . '/src/repositories/RememberMeTokenRepository.php';
 require_once __DIR__ . '/src/repositories/PasswordResetTokenRepository.php';
 require_once __DIR__ . '/src/repositories/SpecialtyRepository.php';
 require_once __DIR__ . '/src/repositories/ProviderRepository.php';
@@ -57,12 +55,13 @@ if (!$db) {
 }
 
 $users = new UserRepository($db);
+$rememberTokens = new RememberMeTokenRepository($db);
 $tokens = new PasswordResetTokenRepository($db);
 $specialties = new SpecialtyRepository($db);
 $providers = new ProviderRepository($db);
 $controllers = [
-    'auth' => new AuthController($users),
-    'account' => new AccountController($users),
+    'auth' => new AuthController($users, $rememberTokens),
+    'account' => new AccountController($users, $rememberTokens),
     'password_reset' => new PasswordResetController($tokens),
     'specialty' => new SpecialtyController($specialties),
     'provider' => new ProviderController($providers, $specialties)

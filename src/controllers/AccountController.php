@@ -2,14 +2,17 @@
 require_once __DIR__ . '/ControllerResponse.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../repositories/UserRepository.php';
+require_once __DIR__ . '/../repositories/RememberMeTokenRepository.php';
 
 class AccountController
 {
     private UserRepository $users;
+    private ?RememberMeTokenRepository $rememberTokens;
 
-    public function __construct(UserRepository $users)
+    public function __construct(UserRepository $users, ?RememberMeTokenRepository $rememberTokens = null)
     {
         $this->users = $users;
+        $this->rememberTokens = $rememberTokens;
     }
 
     public function update(array $input): ControllerResponse
@@ -49,6 +52,10 @@ class AccountController
         }
 
         $_SESSION['usuario_logado'] = $atualizado;
+        if ($senha !== '') {
+            $this->rememberTokens?->revokeAllForUser((int) $usuario->getId());
+            clearRememberCookie();
+        }
         return new ControllerResponse(['sucesso' => true, 'mensagem' => 'Dados atualizados com sucesso!']);
     }
 

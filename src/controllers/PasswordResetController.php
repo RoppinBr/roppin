@@ -17,7 +17,11 @@ class PasswordResetController
         $documento = strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', trim($input['cpf'] ?? '')));
         $recuperacao = $documento !== '' ? $this->tokens->createForDocument($documento) : false;
 
-        if (is_array($recuperacao) && empty($recuperacao['limitado'])) {
+        if ($recuperacao === false) {
+            error_log('PasswordResetController::request -> nenhum token criado (documento sem conta correspondente ou falha interna).');
+        } elseif (!empty($recuperacao['limitado'])) {
+            error_log('PasswordResetController::request -> solicitação limitada pelo intervalo de 1 minuto.');
+        } else {
             $appUrl = rtrim(trim((string) getenv('APP_URL')), '/');
             $esquema = strtolower((string) parse_url($appUrl, PHP_URL_SCHEME));
 
@@ -26,6 +30,9 @@ class PasswordResetController
 
                 if (!sendPasswordResetEmail($recuperacao['email'], $recuperacao['nome'], $resetUrl)) {
                     $this->tokens->invalidate($recuperacao['token']);
+                    error_log('PasswordResetController::request -> SMTP não aceitou a mensagem de recuperação.');
+                } else {
+                    error_log('PasswordResetController::request -> SMTP aceitou a mensagem de recuperação.');
                 }
             } else {
                 error_log('PasswordResetController::request -> APP_URL inválida.');

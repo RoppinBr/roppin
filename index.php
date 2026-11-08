@@ -726,6 +726,7 @@
             const formData = new FormData(recoveryForm);
             formData.append('acao', 'solicitar_recuperacao');
             toggleLoader(true);
+            fecharModal();
 
             try {
                 const response = await fetch('processar.php', { method: 'POST', body: formData });
@@ -805,7 +806,7 @@
 
                         if (typeof fecharModal === "function") fecharModal(); 
                         
-                        window.location.href = "src/pages/conta.php";
+                        // window.location.href = "src/pages/conta.php";
                     } else {
                         mostrarNotificacao(dados.mensagem, dados.sucesso);
                     }

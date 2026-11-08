@@ -9,12 +9,17 @@ function sendPasswordResetEmail(string $email, string $nome, string $resetUrl): 
 {
     $host = trim((string) getenv('SMTP_HOST'));
     $usuario = trim((string) getenv('SMTP_USER'));
-    $senha = (string) getenv('SMTP_PASS');
+    $senha = preg_replace('/\s+/', '', (string) getenv('SMTP_PASS'));
     $remetente = trim((string) (getenv('SMTP_FROM') ?: $usuario));
     $criptografia = strtolower(trim((string) (getenv('SMTP_ENCRYPTION') ?: 'tls')));
 
     if ($host === '' || $remetente === '' || !filter_var($remetente, FILTER_VALIDATE_EMAIL)) {
         error_log('password_reset_mailer -> SMTP_HOST e SMTP_FROM/SMTP_USER válidos são obrigatórios.');
+        return false;
+    }
+
+    if ($usuario !== '' && $senha === '') {
+        error_log('password_reset_mailer -> SMTP_PASS deve conter a senha de app do provedor.');
         return false;
     }
 
@@ -56,7 +61,7 @@ function sendPasswordResetEmail(string $email, string $nome, string $resetUrl): 
 
         return $mailer->send();
     } catch (\Throwable $e) {
-        error_log('password_reset_mailer -> Falha ao enviar email: ' . $mailer->ErrorInfo);
+        error_log('password_reset_mailer -> Falha ao enviar email: ' . ($mailer->ErrorInfo ?: $e->getMessage()));
         return false;
     }
 }

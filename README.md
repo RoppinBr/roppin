@@ -55,15 +55,17 @@ Em ambiente local, `APP_URL=http://localhost:8000` serve para testar no mesmo co
 
 ## Models e repositories
 
-Os models representam as entidades do schema: `User`, `PasswordResetToken`, `Specialty`, `Requester`, `Provider`, `ServiceCall`, `Payment`, `Review` e `Message`. `CrudRepository` fornece leitura, criação, atualização e exclusão para os models de marketplace com tabela, chave e campos validados por allowlist. Usuários e tokens usam repositories próprios (`UserRepository` e `PasswordResetTokenRepository`) porque têm regras específicas de senha e expiração. `BaseRepository` compartilha a conexão e operações comuns. Controllers coordenam a lógica da requisição; SQL fica nos repositories.
+Os models representam as entidades do schema: `User`, `PasswordResetToken`, `Specialty`, `Requester`, `Provider`, `ServiceCall`, `Payment`, `Review` e `Message`. `CrudRepository` fornece leitura, criação, atualização e exclusão para os models de marketplace com tabela, chave e campos validados por allowlist. Usuários, tokens, especialidades e prestadores usam repositories próprios por terem regras específicas. `BaseRepository` compartilha a conexão e operações comuns. Controllers coordenam a lógica da requisição; SQL fica nos repositories.
 
-`processar.php` valida o método HTTP, localiza a ação e serializa a resposta. As ações ficam em `AuthController`, `AccountController` e `PasswordResetController`. Para adicionar um fluxo, crie o método no controller correspondente e registre a ação no mapa de rotas do endpoint.
+`processar.php` valida o método HTTP, localiza a ação e serializa a resposta. As ações ficam em `AuthController`, `AccountController`, `PasswordResetController`, `SpecialtyController` e `ProviderController`. Para adicionar um fluxo, crie o método no controller correspondente e registre a ação no mapa de rotas do endpoint.
+
+Na página da conta, a aba **Especialidades** permite criar, editar, listar e excluir especialidades; não é possível apagar uma especialidade que esteja vinculada a prestadores. Por enquanto, qualquer usuário autenticado pode gerenciar a lista, pois o schema ainda não possui perfis ou permissões administrativas. A aba **Cadastro de prestador** envia o ID da especialidade selecionada e o valor por hora; o servidor exige uma especialidade existente e aceita somente um cadastro de prestador por usuário.
 
 ## Estrutura principal
 
 - `index.php`: página inicial, login, cadastro e menu de conta.
 - `processar.php`: front controller e mapa de ações JSON.
-- `src/controllers`: lógica das ações de autenticação, conta e recuperação.
+- `src/controllers`: lógica das ações de autenticação, conta, recuperação, especialidades e prestadores.
 - `src/pages/conta.php`: edição e exclusão da conta autenticada.
 - `src/pages/redefinir_senha.php`: formulário aberto pelo link de recuperação.
 - `src/scripts/migrate.php`: runner CLI das migrations.

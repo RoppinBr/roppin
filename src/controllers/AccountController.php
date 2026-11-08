@@ -27,9 +27,20 @@ class AccountController
         $documento = trim($input['cpf'] ?? '');
         $email = trim($input['email'] ?? '');
         $senha = $input['senha'] ?? '';
+        $confirmacaoSenha = $input['confirmar_senha'] ?? '';
 
         if ($nome === '' || $documento === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return new ControllerResponse(['sucesso' => false, 'mensagem' => 'Informe nome, documento e um e-mail válido.'], 400);
+        }
+
+        if ($senha !== '' || $confirmacaoSenha !== '') {
+            if (strlen($senha) < 8) {
+                return new ControllerResponse(['sucesso' => false, 'mensagem' => 'A nova senha precisa ter pelo menos 8 caracteres.'], 400);
+            }
+
+            if (!hash_equals($senha, $confirmacaoSenha)) {
+                return new ControllerResponse(['sucesso' => false, 'mensagem' => 'A confirmação da nova senha não confere.'], 400);
+            }
         }
 
         $atualizado = $this->users->update((int) $usuario->getId(), $nome, $documento, $email, $senha);
@@ -50,6 +61,11 @@ class AccountController
 
         if (!$this->validCsrfToken($input['csrf_token'] ?? '')) {
             return new ControllerResponse(['sucesso' => false, 'mensagem' => 'Sua sessão expirou. Atualize a página e tente novamente.'], 403);
+        }
+
+        $senhaAtual = $input['senha_atual'] ?? '';
+        if ($senhaAtual === '' || !$this->users->findByEmailAndPassword($usuario->getEmail(), $senhaAtual)) {
+            return new ControllerResponse(['sucesso' => false, 'mensagem' => 'A senha atual não confere. A conta não foi excluída.'], 403);
         }
 
         if (!$this->users->delete((int) $usuario->getId())) {

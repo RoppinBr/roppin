@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/src/models/User.php';
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -19,7 +21,12 @@ $rotas = [
     'solicitar_recuperacao' => ['password_reset', 'request'],
     'redefinir_senha' => ['password_reset', 'reset'],
     'atualizar_usuario' => ['account', 'update'],
-    'excluir_usuario' => ['account', 'delete']
+    'excluir_usuario' => ['account', 'delete'],
+    'listar_especialidades' => ['specialty', 'index'],
+    'criar_especialidade' => ['specialty', 'create'],
+    'atualizar_especialidade' => ['specialty', 'update'],
+    'excluir_especialidade' => ['specialty', 'delete'],
+    'cadastrar_prestador' => ['provider', 'register']
 ];
 
 if (!isset($rotas[$acao])) {
@@ -31,9 +38,13 @@ if (!isset($rotas[$acao])) {
 require_once __DIR__ . '/src/scripts/conexao.php';
 require_once __DIR__ . '/src/repositories/UserRepository.php';
 require_once __DIR__ . '/src/repositories/PasswordResetTokenRepository.php';
+require_once __DIR__ . '/src/repositories/SpecialtyRepository.php';
+require_once __DIR__ . '/src/repositories/ProviderRepository.php';
 require_once __DIR__ . '/src/controllers/AuthController.php';
 require_once __DIR__ . '/src/controllers/AccountController.php';
 require_once __DIR__ . '/src/controllers/PasswordResetController.php';
+require_once __DIR__ . '/src/controllers/SpecialtyController.php';
+require_once __DIR__ . '/src/controllers/ProviderController.php';
 
 $db = getConexao();
 if (!$db) {
@@ -44,10 +55,14 @@ if (!$db) {
 
 $users = new UserRepository($db);
 $tokens = new PasswordResetTokenRepository($db);
+$specialties = new SpecialtyRepository($db);
+$providers = new ProviderRepository($db);
 $controllers = [
     'auth' => new AuthController($users),
     'account' => new AccountController($users),
-    'password_reset' => new PasswordResetController($tokens)
+    'password_reset' => new PasswordResetController($tokens),
+    'specialty' => new SpecialtyController($specialties),
+    'provider' => new ProviderController($providers, $specialties)
 ];
 [$controllerName, $method] = $rotas[$acao];
 

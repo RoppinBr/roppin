@@ -2,6 +2,11 @@
 require_once 'config.php';
 
 function getConexao() {
+    if (!extension_loaded('mysqli')) {
+        error_log('Erro de conexão: a extensão mysqli não está habilitada no PHP.');
+        return false;
+    }
+
     $host = getenv('DB_HOST');
     $user = getenv('DB_USER');
     $pass = getenv('DB_PASS');

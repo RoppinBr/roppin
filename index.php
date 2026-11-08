@@ -107,13 +107,16 @@
                     <div class="bg-red-100 text-red-700 rounded-full w-8 h-8 flex items-center justify-center font-bold">
                         <?php echo strtoupper(substr($nome, 0, 1)); ?>
                     </div>
-                    <div class="flex flex-col">
-                        <span class="text-sm font-bold text-gray-800 truncate w-32" title="<?php echo htmlspecialchars($nome); ?>">
+                    <div class="flex min-w-0 flex-1 items-center gap-2">
+                        <span class="min-w-0 flex-1 truncate text-sm font-bold text-gray-800" title="<?php echo htmlspecialchars($nome); ?>">
                             <?php echo htmlspecialchars($nome); ?>
                         </span>
-                        <a id="deslogar-a" class="text-xs text-red-600 hover:text-red-800 hover:underline text-left cursor-pointer">
-                            Sair / Deslogar
+                        <a href="src/pages/conta.php" title="Editar cadastro" aria-label="Editar cadastro" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-700 transition-colors hover:bg-red-100 hover:text-red-900">
+                            <i class="fas fa-user-pen" aria-hidden="true"></i>
                         </a>
+                        <button id="deslogar-a" type="button" title="Sair" aria-label="Sair" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-700 transition-colors hover:bg-red-100 hover:text-red-900">
+                            <i class="fas fa-right-from-bracket" aria-hidden="true"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -135,9 +138,13 @@
         </a>
         
         <div class="flex items-center space-x-3"> 
-             <button onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white text-sm font-semibold px-3 py-1 rounded hover:bg-red-600 transition-colors">
-                 LOGIN
-             </button>
+             <?php if (isset($_SESSION['usuario_logado']) && $_SESSION['usuario_logado'] instanceof User): ?>
+                 <a href="src/pages/conta.php" class="text-white text-sm font-semibold px-3 py-1 rounded hover:bg-red-600 transition-colors">MINHA CONTA</a>
+             <?php else: ?>
+                 <button onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white text-sm font-semibold px-3 py-1 rounded hover:bg-red-600 transition-colors">
+                     LOGIN
+                 </button>
+             <?php endif; ?>
              <button id="hamburger-menu" class="p-2 rounded-full text-white hover:bg-red-600 transition-colors">
                  <i class="fas fa-bars text-xl"></i>
              </button>
@@ -690,7 +697,7 @@
 
                         if (typeof fecharModal === "function") fecharModal(); 
                         
-                        window.location.reload(); 
+                        window.location.reload();
                     } else {
                         mostrarNotificacao(dados.mensagem, dados.sucesso);
                     }
@@ -730,7 +737,7 @@
 
                         if (typeof fecharModal === "function") fecharModal(); 
                         
-                        window.location.reload(); 
+                        window.location.href = "src/pages/conta.php";
                     } else {
                         mostrarNotificacao(dados.mensagem, dados.sucesso);
                     }

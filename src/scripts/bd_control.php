@@ -49,10 +49,10 @@
 
         $hashSenha = password_hash($senha, PASSWORD_DEFAULT); # Em BCRIPT
 
-        $stmt = $db->prepare("INSERT INTO Usuario (nome, cpf, email, senha) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $nome, $cpf, $email, $hashSenha);
-        
         try {
+            $stmt = $db->prepare("INSERT INTO Usuario (nome, cpf, email, senha) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $nome, $cpf, $email, $hashSenha);
+
             if ($stmt->execute()) {
 
                 $dados = [
@@ -68,6 +68,62 @@
 
         } catch (mysqli_sql_exception $e) {
             error_log("createUser -> Erro de banco: " . $e->getMessage());
+        }
+
+        return false;
+    }
+
+    function updateUser(int $id, string $nome, string $cpf, string $email, string $senha = ''): false | User
+    {
+        global $db;
+
+        if (!$db) {
+            error_log("updateUser -> Tentativa de atualização sem conexão com o banco.");
+            return false;
+        }
+
+        try {
+            if ($senha !== '') {
+                $hashSenha = password_hash($senha, PASSWORD_DEFAULT);
+                $stmt = $db->prepare("UPDATE Usuario SET nome = ?, cpf = ?, email = ?, senha = ? WHERE id = ?");
+                $stmt->bind_param("ssssi", $nome, $cpf, $email, $hashSenha, $id);
+            } else {
+                $stmt = $db->prepare("UPDATE Usuario SET nome = ?, cpf = ?, email = ? WHERE id = ?");
+                $stmt->bind_param("sssi", $nome, $cpf, $email, $id);
+            }
+
+            $stmt->execute();
+
+            $consulta = $db->prepare("SELECT id, nome, cpf, email, senha FROM Usuario WHERE id = ? LIMIT 1");
+            $consulta->bind_param("i", $id);
+            $consulta->execute();
+            $dados = $consulta->get_result()->fetch_assoc();
+
+            return $dados ? new User($dados) : false;
+        } catch (mysqli_sql_exception $e) {
+            error_log("updateUser -> Erro de banco: " . $e->getMessage());
+        }
+
+        return false;
+    }
+
+    function deleteUser(int $id): bool
+    {
+        global $db;
+
+        if (!$db) {
+            error_log("deleteUser -> Tentativa de exclusão sem conexão com o banco.");
+            return false;
+        }
+
+        try {
+            $stmt = $db->prepare("DELETE FROM Usuario WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+
+            return $stmt->affected_rows === 1;
+        } catch (mysqli_sql_exception $e) {
+            error_log("deleteUser -> Erro de banco: " . $e->getMessage());
         }
 
         return false;

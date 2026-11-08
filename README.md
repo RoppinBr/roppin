@@ -35,7 +35,7 @@ php src/scripts/migrate.php
 
 O runner aplica `initial_migration.sql` como schema inicial e os arquivos `database/migrations/*.sql` em ordem. O histórico e o checksum de cada arquivo ficam em `schema_migrations`; quando uma migration já aplicada for editada, o runner para com erro. Para mudar o schema, crie uma nova migration numerada em vez de alterar uma antiga. O comando pode ser executado novamente: migrations já registradas serão ignoradas.
 
-`initial_migration.sql` cria `Usuario`, `Especialidade`, `Tomador`, `Prestador`, `Chamado`, `Pagamento`, `Avaliacao` e `Mensagem`. Uma migration deixa `Usuario.idPessoa` opcional porque o schema atual ainda não define uma tabela `Pessoa`; isso permite o cadastro até que essa relação seja implementada. `PasswordResetTokens` é criada em sua própria migration SQL porque o schema inicial já foi aplicado; migrations aplicadas não devem ser editadas.
+`initial_migration.sql` cria `Usuario`, `Especialidade`, `Tomador`, `Prestador`, `Chamado`, `Pagamento`, `Avaliacao` e `Mensagem`. Uma migration deixa `Usuario.idPessoa` opcional porque o schema atual ainda não define uma tabela `Pessoa`; isso permite o cadastro até que essa relação seja implementada. Migrations posteriores criam `PasswordResetTokens` e convertem a especialidade singular do prestador em uma relação N:N via `PrestadorEspecialidade`, preservando os vínculos existentes. Migrations aplicadas não devem ser editadas.
 
 Inicie o servidor PHP embutido:
 
@@ -59,7 +59,7 @@ Os models representam as entidades do schema: `User`, `PasswordResetToken`, `Spe
 
 `processar.php` valida o método HTTP, localiza a ação e serializa a resposta. As ações ficam em `AuthController`, `AccountController`, `PasswordResetController`, `SpecialtyController` e `ProviderController`. Para adicionar um fluxo, crie o método no controller correspondente e registre a ação no mapa de rotas do endpoint.
 
-Na página da conta, a aba **Especialidades** permite criar, editar, listar e excluir especialidades; não é possível apagar uma especialidade que esteja vinculada a prestadores. Por enquanto, qualquer usuário autenticado pode gerenciar a lista, pois o schema ainda não possui perfis ou permissões administrativas. A aba **Cadastro de prestador** envia o ID da especialidade selecionada e o valor por hora; o servidor exige uma especialidade existente e aceita somente um cadastro de prestador por usuário.
+Na aba **Cadastro de prestador**, o usuário define o valor cobrado e o período (`hora`, `dia` ou `servico`) e seleciona várias especialidades. O mesmo formulário cadastra ou atualiza esses valores. O modal filtra por texto, mostra as selecionadas no topo e mantém novas opções em rascunho até **Salvar especialidades**. Para quem ainda não é prestador, esse botão grava nomes novos no catálogo e mantém as seleções no formulário; **Cadastrar como prestador** cria o perfil e todos os vínculos em uma transação. Para prestadores existentes, salvar o modal atualiza os vínculos e cria nomes novos atomicamente. O servidor valida os IDs e permite um cadastro de prestador por usuário. No momento, usuários cadastrados como prestadores podem adicionar especialidades ao catálogo; o schema ainda não possui perfis ou permissões administrativas.
 
 ## Estrutura principal
 

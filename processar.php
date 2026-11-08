@@ -23,10 +23,13 @@ $rotas = [
     'atualizar_usuario' => ['account', 'update'],
     'excluir_usuario' => ['account', 'delete'],
     'listar_especialidades' => ['specialty', 'index'],
+    'criar_especialidades_rascunho' => ['specialty', 'createDrafts'],
     'criar_especialidade' => ['specialty', 'create'],
     'atualizar_especialidade' => ['specialty', 'update'],
     'excluir_especialidade' => ['specialty', 'delete'],
-    'cadastrar_prestador' => ['provider', 'register']
+    'cadastrar_prestador' => ['provider', 'register'],
+    'perfil_prestador' => ['provider', 'profile'],
+    'salvar_especialidades_prestador' => ['provider', 'saveSpecialties']
 ];
 
 if (!isset($rotas[$acao])) {

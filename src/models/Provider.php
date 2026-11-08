@@ -5,6 +5,6 @@ class Provider extends Model
 {
     public static function table(): string { return 'Prestador'; }
     public static function primaryKey(): string { return 'idUsuario'; }
-    public static function fields(): array { return ['idUsuario', 'idEspecialidade', 'valor_hora']; }
+    public static function fields(): array { return ['idUsuario', 'valor', 'periodo_cobranca']; }
     public static function hasAutoIncrement(): bool { return false; }
 }

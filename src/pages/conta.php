@@ -107,53 +107,57 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
         <section id="panel-provider" role="tabpanel" aria-labelledby="tab-provider" tabindex="0" hidden>
             <div class="mb-6">
                 <h2 class="text-2xl font-bold">Cadastro de prestador</h2>
-                <p class="mt-2 text-gray-600">Configure em que áreas você consegue trabalhar.</p>
+                <p class="mt-2 text-gray-600">Configure seu perfil de atendimento.</p>
             </div>
 
             <section class="rounded-lg bg-white p-6 shadow-sm sm:p-8">
                 <form id="provider-form" class="space-y-5">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-                    <div>
-                        <label for="provider-specialty" class="mb-1 block text-sm font-semibold">Especialidade</label>
-                        <select id="provider-specialty" name="idEspecialidade" required class="w-full rounded border border-gray-300 bg-white px-3 py-2 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
-                            <option value="">Selecione uma especialidade cadastrada</option>
-                        </select>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="valor-hora" class="mb-1 block text-sm font-semibold">Valor cobrado (R$)</label>
+                            <input id="valor-hora" name="valor" type="number" min="0.01" max="99999999.99" step="0.01" required class="w-full rounded border border-gray-300 px-3 py-2 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
+                        </div>
+                        <div>
+                            <label for="periodo-cobranca" class="mb-1 block text-sm font-semibold">Período de cobrança</label>
+                            <select id="periodo-cobranca" name="periodo_cobranca" required class="w-full rounded border border-gray-300 bg-white px-3 py-2 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
+                                <option value="hora">Por hora</option>
+                                <option value="dia">Por dia</option>
+                                <option value="servico">Por serviço</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label for="valor-hora" class="mb-1 block text-sm font-semibold">Valor por hora (R$)</label>
-                        <input id="valor-hora" name="valor_hora" type="number" min="0.01" max="99999999.99" step="0.01" required class="w-full rounded border border-gray-300 px-3 py-2 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
+
+                    <div class="border-t border-gray-200 pt-5">
+                        <h3 class="text-lg font-bold">Especialidade</h3>
+                        <div id="provider-specialty-pills" class="mt-3 flex flex-wrap gap-2"></div>
+                        <button id="edit-provider-specialties" type="button" class="mt-4 rounded border border-red-700 px-4 py-2 font-semibold text-red-700 hover:bg-red-50">Adicionar especialidades</button>
                     </div>
+
                     <p id="provider-message" class="hidden text-sm" role="status" aria-live="polite"></p>
-                    <button id="provider-submit" type="submit" disabled class="rounded bg-red-700 px-5 py-3 font-bold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50">Cadastrar como prestador</button>
+                    <button id="provider-submit" type="submit" class="rounded bg-red-700 px-5 py-3 font-bold text-white hover:bg-red-800">Cadastrar como prestador</button>
                 </form>
             </section>
-        </section>
-
-        <section id="panel-specialties" role="tabpanel" aria-labelledby="tab-specialties" tabindex="0" hidden>
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold">Gerenciar especialidades</h2>
-                <p class="mt-2 text-gray-600">As especialidades cadastradas aparecem no formulário de prestador.</p>
-            </div>
-
-            <section class="rounded-lg bg-white p-6 shadow-sm sm:p-8">
-                <form id="specialty-form" class="space-y-4">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
-                    <input type="hidden" name="idEspecialidade" value="">
-                    <div>
-                        <label for="specialty-name" class="mb-1 block text-sm font-semibold">Nome da especialidade</label>
-                        <input id="specialty-name" name="nomeEspecialidade" type="text" maxlength="100" required class="w-full rounded border border-gray-300 px-3 py-2 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
-                    </div>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <button id="specialty-submit" type="submit" class="rounded bg-red-700 px-5 py-3 font-bold text-white hover:bg-red-800">Cadastrar especialidade</button>
-                        <button id="specialty-cancel-edit" type="button" class="hidden rounded border border-gray-300 px-4 py-3 font-semibold text-gray-700 hover:bg-gray-50">Cancelar edição</button>
-                    </div>
-                    <p id="specialty-message" class="hidden text-sm" role="status" aria-live="polite"></p>
-                </form>
-            </section>
-
-            <ul id="specialty-list" class="mt-6 divide-y divide-gray-200 rounded-lg bg-white shadow-sm" aria-live="polite"></ul>
         </section>
     </main>
+
+    <div id="provider-specialty-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 p-4" aria-hidden="true">
+        <section role="dialog" aria-modal="true" aria-labelledby="provider-specialty-modal-title" class="flex max-h-[90vh] w-full max-w-xl flex-col rounded-lg bg-white shadow-xl">
+            <header class="border-b border-gray-200 p-5 sm:p-6">
+                <h2 id="provider-specialty-modal-title" class="text-xl font-bold">Editar especialidades</h2>
+                <label for="provider-specialty-filter" class="sr-only">Buscar especialidade</label>
+                <input id="provider-specialty-filter" type="search" autocomplete="off" placeholder="Buscar especialidade" class="mt-4 w-full rounded border border-gray-300 px-3 py-2 focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
+            </header>
+            <div class="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
+                <ul id="provider-specialty-options" class="divide-y divide-gray-100 rounded border border-gray-200" aria-label="Especialidades"></ul>
+                <p id="provider-specialty-modal-message" class="mt-3 hidden text-sm" role="status" aria-live="polite"></p>
+            </div>
+            <footer class="flex justify-end gap-3 border-t border-gray-200 p-5 sm:px-6">
+                <button id="cancel-provider-specialties" type="button" class="rounded border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
+                <button id="save-provider-specialties" type="button" class="rounded bg-red-700 px-4 py-2 font-bold text-white hover:bg-red-800">Salvar especialidades</button>
+            </footer>
+        </section>
+    </div>
 
     <div id="confirmation-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 p-4" aria-hidden="true">
         <section role="dialog" aria-modal="true" aria-labelledby="confirmation-title" aria-describedby="confirmation-description" class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
@@ -192,15 +196,19 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
 
         const accountForm = document.getElementById('account-form');
         const deleteForm = document.getElementById('delete-form');
-        const specialtyForm = document.getElementById('specialty-form');
-        const specialtyList = document.getElementById('specialty-list');
-        const specialtyMessage = document.getElementById('specialty-message');
-        const specialtySubmit = document.getElementById('specialty-submit');
-        const specialtyCancelEdit = document.getElementById('specialty-cancel-edit');
         const providerForm = document.getElementById('provider-form');
-        const providerSpecialty = document.getElementById('provider-specialty');
         const providerSubmit = document.getElementById('provider-submit');
         const providerMessage = document.getElementById('provider-message');
+        const providerRateInput = document.getElementById('valor-hora');
+        const providerBillingPeriod = document.getElementById('periodo-cobranca');
+        const providerSpecialtyPills = document.getElementById('provider-specialty-pills');
+        const editProviderSpecialties = document.getElementById('edit-provider-specialties');
+        const providerSpecialtyModal = document.getElementById('provider-specialty-modal');
+        const providerSpecialtyFilter = document.getElementById('provider-specialty-filter');
+        const providerSpecialtyOptions = document.getElementById('provider-specialty-options');
+        const providerSpecialtyModalMessage = document.getElementById('provider-specialty-modal-message');
+        const cancelProviderSpecialties = document.getElementById('cancel-provider-specialties');
+        const saveProviderSpecialties = document.getElementById('save-provider-specialties');
         const accountTabs = Array.from(document.querySelectorAll('#account-tabs [role="tab"]'));
         const accountPanels = accountTabs.map((tab) => document.getElementById(tab.getAttribute('aria-controls')));
         const confirmationModal = document.getElementById('confirmation-modal');
@@ -213,6 +221,12 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
         const confirmAccountAction = document.getElementById('confirm-account-action');
         let pendingAction = null;
         let submitting = false;
+        let allSpecialties = [];
+        let savedSpecialtyIds = [];
+        let draftSpecialtyIds = new Set();
+        let draftNewSpecialties = [];
+        let savingSpecialties = false;
+        let providerRegistered = false;
 
         function activateTab(index, moveFocus = false) {
             accountTabs.forEach((tab, tabIndex) => {
@@ -258,144 +272,282 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
             element.classList.add(success ? 'text-green-700' : 'text-red-700');
         }
 
-        function resetSpecialtyForm() {
-            specialtyForm.reset();
-            specialtyForm.elements.idEspecialidade.value = '';
-            specialtySubmit.textContent = 'Cadastrar especialidade';
-            specialtyCancelEdit.classList.add('hidden');
-        }
-
-        async function sendFormAction(form, action) {
-            const data = new FormData(form);
+        async function postAction(action, values = {}) {
+            const data = new FormData();
             data.set('acao', action);
+            Object.entries(values).forEach(([key, value]) => data.set(key, String(value)));
             const response = await fetch('../../processar.php', { method: 'POST', body: data });
             return response.json();
         }
 
-        function createSpecialtyRow(specialty) {
-            const row = document.createElement('li');
-            row.className = 'flex flex-wrap items-center justify-between gap-3 px-5 py-4';
+        function normalizeSpecialtyName(name) {
+            return name.trim().toLocaleLowerCase('pt-BR');
+        }
 
-            const label = document.createElement('span');
-            label.className = 'font-medium text-gray-800';
-            label.textContent = `#${specialty.idEspecialidade} · ${specialty.nomeEspecialidade}`;
-
-            const actions = document.createElement('div');
-            actions.className = 'flex items-center gap-2';
-
-            const editButton = document.createElement('button');
-            editButton.type = 'button';
-            editButton.className = 'rounded px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50';
-            editButton.textContent = 'Editar';
-            editButton.addEventListener('click', () => {
-                specialtyForm.elements.idEspecialidade.value = specialty.idEspecialidade;
-                specialtyForm.elements.nomeEspecialidade.value = specialty.nomeEspecialidade;
-                specialtySubmit.textContent = 'Salvar especialidade';
-                specialtyCancelEdit.classList.remove('hidden');
-                specialtyForm.elements.nomeEspecialidade.focus();
-            });
-
-            const deleteButton = document.createElement('button');
-            deleteButton.type = 'button';
-            deleteButton.className = 'rounded px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50';
-            deleteButton.textContent = 'Excluir';
-            deleteButton.addEventListener('click', async () => {
-                if (!window.confirm(`Excluir a especialidade "${specialty.nomeEspecialidade}"?`)) {
-                    return;
-                }
-
-                const data = new FormData(specialtyForm);
-                data.set('acao', 'excluir_especialidade');
-                data.set('idEspecialidade', specialty.idEspecialidade);
-
-                try {
-                    const response = await fetch('../../processar.php', { method: 'POST', body: data });
-                    const result = await response.json();
-                    setInlineMessage(specialtyMessage, result.mensagem, result.sucesso);
-                    if (result.sucesso) {
-                        await loadSpecialties();
-                    }
-                } catch (error) {
-                    setInlineMessage(specialtyMessage, 'Não foi possível excluir a especialidade.');
-                }
-            });
-
-            actions.append(editButton, deleteButton);
-            row.append(label, actions);
-            return row;
+        function showProviderSpecialtyModalMessage(message, success = false) {
+            providerSpecialtyModalMessage.textContent = message;
+            providerSpecialtyModalMessage.classList.remove('hidden', 'text-red-700', 'text-green-700');
+            providerSpecialtyModalMessage.classList.add(success ? 'text-green-700' : 'text-red-700');
         }
 
         async function loadSpecialties() {
-            const data = new FormData();
-            data.set('acao', 'listar_especialidades');
-
             try {
-                const response = await fetch('../../processar.php', { method: 'POST', body: data });
-                const result = await response.json();
+                const result = await postAction('listar_especialidades');
                 if (!result.sucesso) {
-                    setInlineMessage(specialtyMessage, result.mensagem);
-                    return;
+                    throw new Error(result.mensagem);
                 }
 
-                specialtyList.replaceChildren();
-                providerSpecialty.replaceChildren();
-                const emptyOption = document.createElement('option');
-                emptyOption.value = '';
-                emptyOption.textContent = 'Selecione uma especialidade cadastrada';
-                providerSpecialty.append(emptyOption);
-
-                result.especialidades.forEach((specialty) => {
-                    specialtyList.append(createSpecialtyRow(specialty));
-                    const option = document.createElement('option');
-                    option.value = specialty.idEspecialidade;
-                    option.textContent = `#${specialty.idEspecialidade} · ${specialty.nomeEspecialidade}`;
-                    providerSpecialty.append(option);
-                });
-
-                providerSubmit.disabled = result.especialidades.length === 0;
-                if (result.especialidades.length === 0) {
-                    const emptyState = document.createElement('li');
-                    emptyState.className = 'px-5 py-4 text-sm text-gray-600';
-                    emptyState.textContent = 'Nenhuma especialidade cadastrada.';
-                    specialtyList.append(emptyState);
-                }
+                allSpecialties = result.especialidades.slice().sort((first, second) => first.nomeEspecialidade.localeCompare(second.nomeEspecialidade, 'pt-BR'));
+                renderProviderSpecialtyPills();
             } catch (error) {
-                setInlineMessage(specialtyMessage, 'Não foi possível carregar as especialidades.');
+                setInlineMessage(providerMessage, error.message || 'Não foi possível carregar as especialidades.');
             }
         }
 
-        specialtyForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const updating = specialtyForm.elements.idEspecialidade.value !== '';
+        function renderProviderSpecialtyPills() {
+            providerSpecialtyPills.replaceChildren();
+            const selected = allSpecialties.filter((specialty) => savedSpecialtyIds.includes(Number(specialty.idEspecialidade)));
 
+            if (selected.length === 0) {
+                const emptyState = document.createElement('span');
+                emptyState.className = 'text-sm text-gray-500';
+                emptyState.textContent = 'Nenhuma especialidade cadastrada';
+                providerSpecialtyPills.append(emptyState);
+                editProviderSpecialties.textContent = 'Adicionar especialidades';
+                return;
+            }
+
+            selected.forEach((specialty) => {
+                const pill = document.createElement('span');
+                pill.className = 'inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-sm font-medium text-red-800';
+                pill.textContent = specialty.nomeEspecialidade;
+                providerSpecialtyPills.append(pill);
+            });
+            editProviderSpecialties.textContent = 'Editar especialidades';
+        }
+
+        async function loadProviderProfile() {
             try {
-                const result = await sendFormAction(specialtyForm, updating ? 'atualizar_especialidade' : 'criar_especialidade');
-                setInlineMessage(specialtyMessage, result.mensagem, result.sucesso);
-                if (result.sucesso) {
-                    resetSpecialtyForm();
-                    await loadSpecialties();
+                const result = await postAction('perfil_prestador');
+                if (!result.sucesso) {
+                    throw new Error(result.mensagem);
+                }
+
+                providerRegistered = result.cadastrado;
+                providerSubmit.textContent = providerRegistered ? 'Salvar alterações' : 'Cadastrar como prestador';
+                if (result.cadastrado) {
+                    providerRateInput.value = result.prestador.valor;
+                    providerBillingPeriod.value = result.prestador.periodo_cobranca || 'hora';
+                    savedSpecialtyIds = result.especialidades.map((specialty) => Number(specialty.idEspecialidade));
+                    renderProviderSpecialtyPills();
+                } else {
+                    providerRateInput.value = '';
+                    providerBillingPeriod.value = 'hora';
+                    savedSpecialtyIds = [];
+                    renderProviderSpecialtyPills();
                 }
             } catch (error) {
-                setInlineMessage(specialtyMessage, 'Não foi possível salvar a especialidade.');
+                setInlineMessage(providerMessage, error.message || 'Não foi possível carregar o cadastro de prestador.');
+            }
+        }
+
+        async function registerProvider() {
+            try {
+                const result = await postAction('cadastrar_prestador', {
+                    csrf_token: providerForm.elements.csrf_token.value,
+                    valor: providerRateInput.value,
+                    periodo_cobranca: providerBillingPeriod.value,
+                    especialidade_ids: JSON.stringify(savedSpecialtyIds)
+                });
+                setInlineMessage(providerMessage, result.mensagem, result.sucesso);
+                if (!result.sucesso) {
+                    return false;
+                }
+
+                await loadProviderProfile();
+                await loadSpecialties();
+                return true;
+            } catch (error) {
+                setInlineMessage(providerMessage, 'Não foi possível concluir o cadastro de prestador.');
+                return false;
+            }
+        }
+
+        function renderSpecialtyOptions() {
+            const filter = normalizeSpecialtyName(providerSpecialtyFilter.value);
+            const selected = allSpecialties.filter((specialty) => draftSpecialtyIds.has(Number(specialty.idEspecialidade)));
+            const pending = draftNewSpecialties.slice().sort((first, second) => first.localeCompare(second, 'pt-BR'));
+            const matches = allSpecialties.filter((specialty) =>
+                !draftSpecialtyIds.has(Number(specialty.idEspecialidade)) &&
+                normalizeSpecialtyName(specialty.nomeEspecialidade).includes(filter)
+            );
+
+            providerSpecialtyOptions.replaceChildren();
+            const renderOption = (name, id, isSelected, isNew) => {
+                const item = document.createElement('li');
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.setAttribute('aria-pressed', String(isSelected));
+                option.className = `flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm transition-colors ${isSelected ? 'bg-red-50 font-semibold text-red-800' : 'text-gray-700 hover:bg-gray-50'}`;
+
+                const label = document.createElement('span');
+                label.textContent = name;
+                const state = document.createElement('span');
+                state.className = 'shrink-0 text-xs';
+                state.textContent = isNew ? 'Nova · Remover' : (isSelected ? 'Selecionada' : 'Selecionar');
+                option.append(label, state);
+                option.addEventListener('click', () => {
+                    if (isNew) {
+                        draftNewSpecialties = draftNewSpecialties.filter((pendingName) => normalizeSpecialtyName(pendingName) !== normalizeSpecialtyName(name));
+                    } else if (draftSpecialtyIds.has(Number(id))) {
+                        draftSpecialtyIds.delete(Number(id));
+                    } else {
+                        draftSpecialtyIds.add(Number(id));
+                    }
+                    renderSpecialtyOptions();
+                });
+                item.append(option);
+                providerSpecialtyOptions.append(item);
+            };
+
+            selected.forEach((specialty) => renderOption(specialty.nomeEspecialidade, specialty.idEspecialidade, true, false));
+            pending.forEach((name) => renderOption(name, null, true, true));
+            matches.forEach((specialty) => renderOption(specialty.nomeEspecialidade, specialty.idEspecialidade, false, false));
+
+            if (providerSpecialtyOptions.childElementCount === 0) {
+                const empty = document.createElement('li');
+                empty.className = 'px-4 py-3 text-sm text-gray-500';
+                empty.textContent = 'Nenhuma especialidade corresponde à busca.';
+                providerSpecialtyOptions.append(empty);
+            }
+
+            const addItem = document.createElement('li');
+            const addButton = document.createElement('button');
+            addButton.id = 'add-filtered-specialty';
+            addButton.type = 'button';
+            addButton.className = 'w-full px-4 py-3 text-left text-sm font-semibold text-red-700 hover:bg-red-50';
+            addButton.textContent = 'Adicionar especialidade';
+            addItem.append(addButton);
+            providerSpecialtyOptions.append(addItem);
+        }
+
+        function openProviderSpecialtyModal() {
+            draftSpecialtyIds = new Set(savedSpecialtyIds);
+            draftNewSpecialties = [];
+            providerSpecialtyFilter.value = '';
+            providerSpecialtyModalMessage.classList.add('hidden');
+            renderSpecialtyOptions();
+            providerSpecialtyModal.classList.remove('hidden');
+            providerSpecialtyModal.classList.add('flex');
+            providerSpecialtyModal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('overflow-hidden');
+            providerSpecialtyFilter.focus();
+        }
+
+        function closeProviderSpecialtyModal(force = false) {
+            if (savingSpecialties && !force) {
+                return;
+            }
+            providerSpecialtyModal.classList.add('hidden');
+            providerSpecialtyModal.classList.remove('flex');
+            providerSpecialtyModal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        providerSpecialtyFilter.addEventListener('input', renderSpecialtyOptions);
+        editProviderSpecialties.addEventListener('click', openProviderSpecialtyModal);
+        cancelProviderSpecialties.addEventListener('click', closeProviderSpecialtyModal);
+        providerSpecialtyModal.addEventListener('click', (event) => {
+            if (event.target === providerSpecialtyModal) {
+                closeProviderSpecialtyModal();
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !providerSpecialtyModal.classList.contains('hidden')) {
+                closeProviderSpecialtyModal();
             }
         });
 
-        specialtyCancelEdit.addEventListener('click', resetSpecialtyForm);
+        function addFilteredSpecialtyToDraft() {
+            const name = providerSpecialtyFilter.value.trim();
+            const length = [...name].length;
+            if (name === '' || length > 100) {
+                showProviderSpecialtyModalMessage('Digite uma especialidade com até 100 caracteres.');
+                return;
+            }
+
+            const existing = allSpecialties.find((specialty) => normalizeSpecialtyName(specialty.nomeEspecialidade) === normalizeSpecialtyName(name));
+            if (existing) {
+                draftSpecialtyIds.add(Number(existing.idEspecialidade));
+            } else if (!draftNewSpecialties.some((pendingName) => normalizeSpecialtyName(pendingName) === normalizeSpecialtyName(name))) {
+                draftNewSpecialties.push(name);
+            }
+
+            providerSpecialtyFilter.value = '';
+            providerSpecialtyModalMessage.classList.add('hidden');
+            renderSpecialtyOptions();
+        }
+
+        providerSpecialtyOptions.addEventListener('click', (event) => {
+            if (event.target.closest('#add-filtered-specialty')) {
+                addFilteredSpecialtyToDraft();
+            }
+        });
+
+        saveProviderSpecialties.addEventListener('click', async () => {
+            if (savingSpecialties) {
+                return;
+            }
+
+            savingSpecialties = true;
+            saveProviderSpecialties.disabled = true;
+            try {
+                const result = providerRegistered
+                    ? await postAction('salvar_especialidades_prestador', {
+                        csrf_token: providerForm.elements.csrf_token.value,
+                        especialidade_ids: JSON.stringify([...draftSpecialtyIds]),
+                        novas_especialidades: JSON.stringify(draftNewSpecialties)
+                    })
+                    : await postAction('criar_especialidades_rascunho', {
+                        csrf_token: providerForm.elements.csrf_token.value,
+                        novas_especialidades: JSON.stringify(draftNewSpecialties)
+                    });
+
+                if (!result.sucesso) {
+                    showProviderSpecialtyModalMessage(result.mensagem);
+                    return;
+                }
+
+                savedSpecialtyIds = providerRegistered
+                    ? result.especialidades.map((specialty) => Number(specialty.idEspecialidade))
+                    : [...new Set([
+                        ...draftSpecialtyIds,
+                        ...result.especialidades.map((specialty) => Number(specialty.idEspecialidade))
+                    ])];
+                await loadSpecialties();
+                renderProviderSpecialtyPills();
+                setInlineMessage(
+                    providerMessage,
+                    providerRegistered ? result.mensagem : 'Especialidades guardadas. Conclua o cadastro para vinculá-las ao perfil.',
+                    true
+                );
+                savingSpecialties = false;
+                closeProviderSpecialtyModal(true);
+            } catch (error) {
+                showProviderSpecialtyModalMessage('Não foi possível salvar as especialidades. Tente novamente.');
+            } finally {
+                savingSpecialties = false;
+                saveProviderSpecialties.disabled = false;
+            }
+        });
 
         providerForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            try {
-                const result = await sendFormAction(providerForm, 'cadastrar_prestador');
-                setInlineMessage(providerMessage, result.mensagem, result.sucesso);
-                if (result.sucesso) {
-                    providerSubmit.disabled = true;
-                }
-            } catch (error) {
-                setInlineMessage(providerMessage, 'Não foi possível concluir o cadastro de prestador.');
-            }
+            await registerProvider();
         });
 
         loadSpecialties();
+        loadProviderProfile();
 
         function openConfirmation(action) {
             pendingAction = action;

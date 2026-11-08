@@ -22,6 +22,31 @@ class SpecialtyController
         return new ControllerResponse(['sucesso' => true, 'especialidades' => $specialties]);
     }
 
+    public function createDrafts(array $input): ControllerResponse
+    {
+        if ($response = $this->authorizeWrite($input)) {
+            return $response;
+        }
+
+        $names = json_decode($input['novas_especialidades'] ?? '[]', true);
+        if (!is_array($names)) {
+            return new ControllerResponse(['sucesso' => false, 'mensagem' => 'A lista de especialidades é inválida.'], 400);
+        }
+
+        foreach ($names as $name) {
+            if (!is_string($name) || !$this->validName(trim($name))) {
+                return new ControllerResponse(['sucesso' => false, 'mensagem' => 'Informe nomes de especialidade válidos com até 100 caracteres.'], 400);
+            }
+        }
+
+        $specialties = $this->specialties->createOrFindMany($names);
+        if ($specialties === false) {
+            return new ControllerResponse(['sucesso' => false, 'mensagem' => 'Não foi possível salvar as novas especialidades.'], 409);
+        }
+
+        return new ControllerResponse(['sucesso' => true, 'mensagem' => 'Especialidades salvas.', 'especialidades' => $specialties]);
+    }
+
     public function create(array $input): ControllerResponse
     {
         if ($response = $this->authorizeWrite($input)) {

@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS Tomador (
 CREATE TABLE IF NOT EXISTS Prestador (
     idUsuario INT PRIMARY KEY,
     idEspecialidade INT NOT NULL,
-    valor_hora DECIMAL(10,2) NOT NULL,
+    valor DECIMAL(10,2) NOT NULL,
 
     FOREIGN KEY (idUsuario)
         REFERENCES Usuario(idUsuario),

@@ -38,7 +38,12 @@
         
         <form id="login-form" class="flex flex-col space-y-4">
             <input type="email" name="email" placeholder="Seu E-mail" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
-            <input type="password" name="senha" placeholder="Sua Senha" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <div class="relative">
+                <input id="login-password" type="password" name="senha" placeholder="Sua Senha" required autocomplete="current-password" class="w-full border border-gray-300 rounded p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-red-500">
+                <button id="toggle-login-password" type="button" title="Mostrar senha" aria-label="Mostrar senha" aria-pressed="false" class="absolute inset-y-0 right-0 inline-flex w-12 items-center justify-center rounded-r text-gray-500 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500">
+                    <i id="login-password-eye" class="fas fa-eye" aria-hidden="true"></i>
+                </button>
+            </div>
             <div class="flex justify-between items-center text-sm">
                 <label class="flex items-center text-gray-600">
                     <input type="checkbox" class="mr-2"> Lembrar-me
@@ -718,6 +723,19 @@
         forgotPasswordLink.addEventListener('click', (event) => {
             event.preventDefault();
             alternarFormulario('recuperacao');
+        });
+
+        const loginPassword = document.getElementById('login-password');
+        const toggleLoginPassword = document.getElementById('toggle-login-password');
+        const loginPasswordEye = document.getElementById('login-password-eye');
+        toggleLoginPassword.addEventListener('click', () => {
+            const mostrar = loginPassword.type === 'password';
+            loginPassword.type = mostrar ? 'text' : 'password';
+            toggleLoginPassword.setAttribute('aria-pressed', String(mostrar));
+            toggleLoginPassword.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+            toggleLoginPassword.title = mostrar ? 'Ocultar senha' : 'Mostrar senha';
+            loginPasswordEye.classList.toggle('fa-eye', !mostrar);
+            loginPasswordEye.classList.toggle('fa-eye-slash', mostrar);
         });
 
         const recoveryForm = document.getElementById('forgot-password-form');

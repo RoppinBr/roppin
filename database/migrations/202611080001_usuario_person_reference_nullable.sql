@@ -1,0 +1,1 @@
+ALTER TABLE Usuario MODIFY idPessoa INT NULL;

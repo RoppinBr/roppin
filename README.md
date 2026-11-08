@@ -21,20 +21,21 @@ Copy-Item .env.example .env
 
 Edite o `.env` e preencha as credenciais do banco. Não envie esse arquivo ao Git nem compartilhe suas senhas.
 
-O sistema espera uma tabela `Usuario` com os campos `id`, `nome`, `cpf`, `email` e `senha`. Se ela ainda não existir, um esquema compatível é:
+O banco informado em `DB_NAME` precisa existir antes da primeira execução. Se necessário, crie-o no MySQL:
 
 ```sql
-CREATE TABLE Usuario (
-    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    nome VARCHAR(150) NOT NULL,
-    cpf VARCHAR(20) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    senha VARCHAR(255) NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_usuario_cpf (cpf),
-    UNIQUE KEY uq_usuario_email (email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE DATABASE db_roppin CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
+
+Depois, aplique as migrations a partir da raiz do projeto:
+
+```powershell
+php src/scripts/migrate.php
+```
+
+O runner aplica `initial_migration.sql` como schema inicial e os arquivos `database/migrations/*.sql` em ordem. O histórico e o checksum de cada arquivo ficam em `schema_migrations`; quando uma migration já aplicada for editada, o runner para com erro. Para mudar o schema, crie uma nova migration numerada em vez de alterar uma antiga. O comando pode ser executado novamente: migrations já registradas serão ignoradas.
+
+`initial_migration.sql` cria `Usuario`, `Especialidade`, `Tomador`, `Prestador`, `Chamado`, `Pagamento`, `Avaliacao` e `Mensagem`. Uma migration deixa `Usuario.idPessoa` opcional porque o schema atual ainda não define uma tabela `Pessoa`; isso permite o cadastro até que essa relação seja implementada. `PasswordResetTokens` é criada em sua própria migration SQL porque o schema inicial já foi aplicado; migrations aplicadas não devem ser editadas.
 
 Inicie o servidor PHP embutido:
 
@@ -50,15 +51,25 @@ Preencha no `.env` as variáveis `APP_URL` e `SMTP_*` usando `.env.example` como
 
 Em ambiente local, `APP_URL=http://localhost:8000` serve para testar no mesmo computador. Em produção, configure a URL pública HTTPS do site. O servidor também precisa permitir conexões de saída para o SMTP escolhido.
 
-Na primeira solicitação de recuperação, a aplicação cria a tabela `PasswordResetTokens`; o usuário do banco precisa ter permissão `CREATE TABLE`. A resposta não revela se o CPF está cadastrado. O token é armazenado como hash, expira em 30 minutos, só pode ser usado uma vez e há limite de uma solicitação por minuto por conta.
+`PasswordResetTokens` é criada pela migration, não durante uma requisição da página. O usuário do banco precisa ter permissão `CREATE TABLE` ao aplicar as migrations. A resposta não revela se o CPF está cadastrado. O token é armazenado como hash, expira em 30 minutos, só pode ser usado uma vez e há limite de uma solicitação por minuto por conta.
+
+## Models e repositories
+
+Os models representam as entidades do schema: `User`, `PasswordResetToken`, `Specialty`, `Requester`, `Provider`, `ServiceCall`, `Payment`, `Review` e `Message`. `CrudRepository` fornece leitura, criação, atualização e exclusão para os models de marketplace com tabela, chave e campos validados por allowlist. Usuários e tokens usam repositories próprios (`UserRepository` e `PasswordResetTokenRepository`) porque têm regras específicas de senha e expiração. `BaseRepository` compartilha a conexão e operações comuns. Controllers coordenam a lógica da requisição; SQL fica nos repositories.
+
+`processar.php` valida o método HTTP, localiza a ação e serializa a resposta. As ações ficam em `AuthController`, `AccountController` e `PasswordResetController`. Para adicionar um fluxo, crie o método no controller correspondente e registre a ação no mapa de rotas do endpoint.
 
 ## Estrutura principal
 
 - `index.php`: página inicial, login, cadastro e menu de conta.
-- `processar.php`: endpoint das ações de autenticação, conta e recuperação.
+- `processar.php`: front controller e mapa de ações JSON.
+- `src/controllers`: lógica das ações de autenticação, conta e recuperação.
 - `src/pages/conta.php`: edição e exclusão da conta autenticada.
 - `src/pages/redefinir_senha.php`: formulário aberto pelo link de recuperação.
-- `src/scripts/bd_control.php`: consultas e operações no banco.
+- `src/scripts/migrate.php`: runner CLI das migrations.
+- `database/migrations`: alterações incrementais do schema.
+- `src/repositories`: consultas e operações separadas por tabela.
+- `src/scripts/bd_control.php`: adaptador legado para operações de conta.
 - `src/scripts/password_reset_mailer.php`: envio de e-mail por SMTP.
 - `src/libs/PHPMailer`: biblioteca PHPMailer incluída localmente.
 - `.env.example`: nomes e exemplos das variáveis de configuração.

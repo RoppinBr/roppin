@@ -6,13 +6,10 @@ const ROPPIN_REMEMBER_COOKIE = 'roppin_remember';
 
 function rememberCookieOptions(int $expires): array
 {
-    $appScheme = strtolower((string) parse_url((string) getenv('APP_URL'), PHP_URL_SCHEME));
-    $requestIsHttps = isset($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off';
-
     return [
         'expires' => $expires,
         'path' => '/',
-        'secure' => $requestIsHttps || $appScheme === 'https',
+        'secure' => roppinRequestScheme() === 'https',
         'httponly' => true,
         'samesite' => 'Lax'
     ];

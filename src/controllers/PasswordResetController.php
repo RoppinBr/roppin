@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/ControllerResponse.php';
 require_once __DIR__ . '/../repositories/PasswordResetTokenRepository.php';
+require_once __DIR__ . '/../scripts/config.php';
 require_once __DIR__ . '/../scripts/password_reset_mailer.php';
 
 class PasswordResetController
@@ -22,11 +23,10 @@ class PasswordResetController
         } elseif (!empty($recuperacao['limitado'])) {
             error_log('PasswordResetController::request -> solicitação limitada pelo intervalo de 1 minuto.');
         } else {
-            $appUrl = rtrim(trim((string) getenv('APP_URL')), '/');
-            $esquema = strtolower((string) parse_url($appUrl, PHP_URL_SCHEME));
+            $baseUrl = rtrim(roppinBaseUrl(), '/');
 
-            if ($appUrl !== '' && filter_var($appUrl, FILTER_VALIDATE_URL) && in_array($esquema, ['http', 'https'], true)) {
-                $resetUrl = $appUrl . '/src/pages/redefinir_senha.php?token=' . rawurlencode($recuperacao['token']);
+            if ($baseUrl !== '' && filter_var($baseUrl, FILTER_VALIDATE_URL)) {
+                $resetUrl = $baseUrl . '/src/pages/redefinir_senha.php?token=' . rawurlencode($recuperacao['token']);
 
                 if (!sendPasswordResetEmail($recuperacao['email'], $recuperacao['nome'], $resetUrl)) {
                     $this->tokens->invalidate($recuperacao['token']);
@@ -35,7 +35,7 @@ class PasswordResetController
                     error_log('PasswordResetController::request -> SMTP aceitou a mensagem de recuperação.');
                 }
             } else {
-                error_log('PasswordResetController::request -> APP_URL inválida.');
+                error_log('PasswordResetController::request -> não foi possível derivar a URL base da requisição.');
                 $this->tokens->invalidate($recuperacao['token']);
             }
         }

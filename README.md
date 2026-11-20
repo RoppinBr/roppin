@@ -48,9 +48,9 @@ Acesse <http://localhost:8000> no navegador. Se o PHP não encontrar `mysqli`, h
 
 ## Recuperação de senha
 
-Preencha no `.env` as variáveis `APP_URL` e `SMTP_*` usando `.env.example` como referência. Para Gmail, use `smtp.gmail.com`, porta `587`, criptografia `tls`, o endereço completo em `SMTP_USER` e uma senha de app em `SMTP_PASS`. Não use a senha normal da conta Google.
+Preencha no `.env` as variáveis `SMTP_*` usando `.env.example` como referência. Para Gmail, use `smtp.gmail.com`, porta `587`, criptografia `tls`, o endereço completo em `SMTP_USER` e uma senha de app em `SMTP_PASS`. Não use a senha normal da conta Google.
 
-Em ambiente local, `APP_URL=http://localhost:8000` serve para testar no mesmo computador. Em produção, configure a URL pública HTTPS do site. O servidor também precisa permitir conexões de saída para o SMTP escolhido.
+A URL pública do site é derivada da própria requisição (scheme, host e porta), então não é necessário configurar `APP_URL`. Em produção, atrás de proxy, o servidor deve repassar `HTTPS`/`X-Forwarded-Proto` corretamente e manter `SERVER_NAME` com o domínio público. O servidor também precisa permitir conexões de saída para o SMTP escolhido.
 
 `PasswordResetTokens` é criada pela migration, não durante uma requisição da página. O usuário do banco precisa ter permissão `CREATE TABLE` ao aplicar as migrations. A resposta não revela se o CPF está cadastrado. O token é armazenado como hash, expira em 30 minutos, só pode ser usado uma vez e há limite de uma solicitação por minuto por conta.
 

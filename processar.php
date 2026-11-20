@@ -26,7 +26,19 @@ $rotas = [
     'excluir_especialidade' => ['specialty', 'delete'],
     'cadastrar_prestador' => ['provider', 'register'],
     'perfil_prestador' => ['provider', 'profile'],
-    'salvar_especialidades_prestador' => ['provider', 'saveSpecialties']
+    'salvar_especialidades_prestador' => ['provider', 'saveSpecialties'],
+    'chat_listar_prestadores' => ['chat', 'providers'],
+    'chat_iniciar_conversa' => ['chat', 'start'],
+    'chat_conversas' => ['chat', 'conversations'],
+    'chat_conversa' => ['chat', 'conversation'],
+    'chat_enviar' => ['chat', 'send'],
+    'chat_encerrar_conversa' => ['chat', 'close'],
+    'chat_reabrir_conversa' => ['chat', 'reopen'],
+    'chat_avaliar' => ['chat', 'rate'],
+    'chat_marcar_lida' => ['chat', 'read'],
+    'chat_focar_conversa' => ['chat', 'focus'],
+    'chat_limpar_foco' => ['chat', 'blur'],
+    'chat_nao_lidas' => ['chat', 'unread']
 ];
 
 if (!isset($rotas[$acao])) {
@@ -41,11 +53,17 @@ require_once __DIR__ . '/src/repositories/RememberMeTokenRepository.php';
 require_once __DIR__ . '/src/repositories/PasswordResetTokenRepository.php';
 require_once __DIR__ . '/src/repositories/SpecialtyRepository.php';
 require_once __DIR__ . '/src/repositories/ProviderRepository.php';
+require_once __DIR__ . '/src/repositories/ConversationRepository.php';
+require_once __DIR__ . '/src/repositories/MessageRepository.php';
+require_once __DIR__ . '/src/repositories/ReviewRepository.php';
+require_once __DIR__ . '/src/services/ChatCryptoService.php';
+require_once __DIR__ . '/src/services/ChatService.php';
 require_once __DIR__ . '/src/controllers/AuthController.php';
 require_once __DIR__ . '/src/controllers/AccountController.php';
 require_once __DIR__ . '/src/controllers/PasswordResetController.php';
 require_once __DIR__ . '/src/controllers/SpecialtyController.php';
 require_once __DIR__ . '/src/controllers/ProviderController.php';
+require_once __DIR__ . '/src/controllers/ChatController.php';
 
 $db = getConexao();
 if (!$db) {
@@ -59,12 +77,19 @@ $rememberTokens = new RememberMeTokenRepository($db);
 $tokens = new PasswordResetTokenRepository($db);
 $specialties = new SpecialtyRepository($db);
 $providers = new ProviderRepository($db);
+$chatService = new ChatService(
+    new ConversationRepository($db),
+    new MessageRepository($db),
+    new ChatCryptoService(),
+    new ReviewRepository($db)
+);
 $controllers = [
     'auth' => new AuthController($users, $rememberTokens),
     'account' => new AccountController($users, $rememberTokens),
     'password_reset' => new PasswordResetController($tokens),
     'specialty' => new SpecialtyController($specialties),
-    'provider' => new ProviderController($providers, $specialties)
+    'provider' => new ProviderController($providers, $specialties),
+    'chat' => new ChatController($chatService)
 ];
 [$controllerName, $method] = $rotas[$acao];
 

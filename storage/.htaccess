@@ -1,0 +1,9 @@
+# Bloqueia o acesso direto aos arquivos enviados pelo chat.
+# Os anexos só podem ser baixados por anexo.php, que valida a sessão e a participação na conversa.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

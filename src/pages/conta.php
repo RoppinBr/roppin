@@ -16,6 +16,71 @@ $csrfToken = $_SESSION['csrf_token'];
 $nome = htmlspecialchars((string) $usuario->getNome(), ENT_QUOTES, 'UTF-8');
 $cpf = htmlspecialchars((string) $usuario->getCpf(), ENT_QUOTES, 'UTF-8');
 $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
+
+require_once __DIR__ . '/../scripts/conexao.php';
+require_once __DIR__ . '/../repositories/ConversationRepository.php';
+require_once __DIR__ . '/../repositories/MessageRepository.php';
+require_once __DIR__ . '/../repositories/ReviewRepository.php';
+require_once __DIR__ . '/../services/ChatCryptoService.php';
+require_once __DIR__ . '/../services/ChatService.php';
+
+$chatRequestedTab = ($_GET['aba'] ?? '') === 'mensagens';
+$chatSelectedToken = trim((string) ($_SESSION['chat_conversa_token'] ?? ''));
+$chatTabActive = chatEnabled() && $chatRequestedTab;
+$chatConversations = [];
+$chatSelectedConversation = null;
+$chatMessages = [];
+$chatLastMessageId = 0;
+$chatOpenNew = ($_GET['novo'] ?? '') === '1';
+$chatInitialQuery = trim((string) ($_GET['q'] ?? ''));
+$chatError = null;
+$chatPollMs = max(3000, min(15000, (int) (getenv('CHAT_POLL_INTERVAL_MS') ?: 5000)));
+
+if (chatEnabled()) {
+    try {
+        $db = getConexao();
+        if (!$db) {
+            throw new ChatException('Não foi possível carregar as mensagens agora.', 503);
+        }
+
+        $chat = new ChatService(
+            new ConversationRepository($db),
+            new MessageRepository($db),
+            new ChatCryptoService(),
+            new ReviewRepository($db)
+        );
+        $chatConversations = $chat->listConversations((int) $usuario->getId());
+
+        if ($chatTabActive && $chatSelectedToken !== '') {
+            try {
+                $chatData = $chat->getConversationByToken((int) $usuario->getId(), $chatSelectedToken);
+                $chatSelectedConversation = $chatData['conversa'];
+                $chatMessages = $chatData['mensagens'];
+                $chatLastMessageId = $chatData['ultimoId'];
+                $chat->markRead(
+                    (int) $usuario->getId(),
+                    $chat->resolveConversationToken((int) $usuario->getId(), $chatSelectedToken),
+                    $chatLastMessageId
+                );
+                $chatConversations = $chat->listConversations((int) $usuario->getId());
+            } catch (ChatException $e) {
+                $chatError = $e->getMessage();
+                $chatSelectedToken = '';
+                unset($_SESSION['chat_conversa_token']);
+            }
+        }
+    } catch (Throwable $e) {
+        error_log('conta.php -> chat: ' . $e->getMessage());
+        $chatError = $e instanceof ChatException
+            ? $e->getMessage()
+            : 'Não foi possível carregar as mensagens agora.';
+    }
+}
+
+$chatUnread = array_sum(array_map(
+    static fn(array $conversation): int => (int) ($conversation['naoLidas'] ?? 0),
+    $chatConversations
+));
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -24,8 +89,9 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minha conta | Roppin</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-<body class="min-h-screen bg-gray-100 text-gray-800">
+<body class="min-h-screen bg-gray-100 text-gray-800" data-chat-endpoint="../../processar.php">
     <header class="bg-red-700 text-white">
         <div class="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
             <a href="../../index.php" class="flex items-center gap-3" aria-label="Voltar para a Roppin">
@@ -36,7 +102,7 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
         </div>
     </header>
 
-    <main class="mx-auto max-w-3xl px-5 py-10">
+    <main class="mx-auto px-5 py-10 <?php echo $chatTabActive ? 'max-w-6xl' : 'max-w-3xl'; ?>">
         <div class="mb-6">
             <p class="text-sm font-semibold uppercase tracking-wide text-red-700">Perfil</p>
             <h1 class="mt-1 text-3xl font-bold">Minha conta</h1>
@@ -45,6 +111,14 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
         <div id="account-tabs" role="tablist" aria-label="Seções da conta" class="mb-8 flex border-b border-gray-300">
             <button id="tab-account" type="button" role="tab" aria-selected="true" aria-controls="panel-account" tabindex="0" class="border-b-2 border-red-700 px-4 py-3 text-sm font-semibold text-red-700 transition-colors">Dados da conta</button>
             <button id="tab-provider" type="button" role="tab" aria-selected="false" aria-controls="panel-provider" tabindex="-1" class="border-b-2 border-transparent px-4 py-3 text-sm font-semibold text-gray-500 transition-colors hover:text-gray-800">Cadastro de prestador</button>
+            <?php if (chatEnabled()): ?>
+                <button id="tab-messages" type="button" role="tab" aria-selected="false" aria-controls="panel-messages" tabindex="-1" class="border-b-2 border-transparent px-4 py-3 text-sm font-semibold text-gray-500 transition-colors hover:text-gray-800">
+                    Mensagens
+                    <?php if ($chatUnread > 0): ?>
+                        <span class="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-red-700 px-1.5 py-0.5 text-[10px] font-bold text-white"><?php echo $chatUnread; ?></span>
+                    <?php endif; ?>
+                </button>
+            <?php endif; ?>
         </div>
 
         <section id="panel-account" role="tabpanel" aria-labelledby="tab-account" tabindex="0">
@@ -136,6 +210,39 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
                 </form>
             </section>
         </section>
+
+        <?php if (chatEnabled()): ?>
+            <section id="panel-messages" role="tabpanel" aria-labelledby="tab-messages" tabindex="0" hidden>
+                <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                        <h2 class="text-2xl font-bold">Mensagens</h2>
+                        <p class="mt-2 text-gray-600">Converse com os profissionais e acompanhe suas conversas.</p>
+                    </div>
+                    <a href="mensagens.php" class="rounded border border-red-700 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">Abrir página completa</a>
+                </div>
+
+                <?php if ($chatError !== null): ?>
+                    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+                        <i class="fas fa-circle-exclamation mr-2" aria-hidden="true"></i>
+                        <?php echo htmlspecialchars($chatError, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php
+                $embedded = true;
+                $selectedConversation = $chatSelectedConversation;
+                $messages = $chatMessages;
+                $conversations = $chatConversations;
+                $selectedToken = $chatSelectedToken;
+                $lastMessageId = $chatLastMessageId;
+                $userId = (int) $usuario->getId();
+                $pollMs = $chatPollMs;
+                $openNew = $chatOpenNew;
+                $initialQuery = $chatInitialQuery;
+                require __DIR__ . '/partials/chat_inbox.php';
+                ?>
+            </section>
+        <?php endif; ?>
     </main>
 
     <div id="provider-specialty-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 p-4" aria-hidden="true">
@@ -243,7 +350,6 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
         }
 
         accountTabs.forEach((tab, index) => {
-            tab.addEventListener('click', () => activateTab(index));
             tab.addEventListener('keydown', (event) => {
                 let nextIndex = index;
                 if (event.key === 'ArrowRight') {
@@ -263,11 +369,40 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
             });
         });
 
-        const requestedTab = new URLSearchParams(window.location.search).get('aba');
+        function syncTabUrl(tabId) {
+            const url = new URL(window.location.href);
+            if (tabId === 'tab-provider') {
+                url.searchParams.set('aba', 'prestador');
+            } else if (tabId === 'tab-messages') {
+                url.searchParams.set('aba', 'mensagens');
+            } else {
+                url.searchParams.delete('aba');
+                url.searchParams.delete('conversa');
+                url.searchParams.delete('novo');
+            }
+            window.history.replaceState({}, '', url);
+        }
+
+        accountTabs.forEach((tab, index) => {
+            tab.addEventListener('click', () => {
+                activateTab(index);
+                syncTabUrl(tab.id);
+            });
+        });
+
+        const requestedParams = new URLSearchParams(window.location.search);
+        const requestedTab = requestedParams.get('aba');
+        const hasRequestedConversation = requestedParams.has('conversa');
+
         if (requestedTab === 'prestador') {
             const providerTabIndex = accountTabs.findIndex((tab) => tab.id === 'tab-provider');
             if (providerTabIndex !== -1) {
                 activateTab(providerTabIndex);
+            }
+        } else if (requestedTab === 'mensagens' || hasRequestedConversation) {
+            const messagesTabIndex = accountTabs.findIndex((tab) => tab.id === 'tab-messages');
+            if (messagesTabIndex !== -1) {
+                activateTab(messagesTabIndex);
             }
         }
 
@@ -678,5 +813,9 @@ $email = htmlspecialchars((string) $usuario->getEmail(), ENT_QUOTES, 'UTF-8');
             }
         });
     </script>
+    <?php if (chatEnabled()): ?>
+        <?php $chatJsVersion = is_file(__DIR__ . '/../scripts/chat.js') ? filemtime(__DIR__ . '/../scripts/chat.js') : 0; ?>
+        <script src="../scripts/chat.js?v=<?php echo $chatJsVersion; ?>" defer></script>
+    <?php endif; ?>
 </body>
 </html>

@@ -1,3 +1,6 @@
 /node_modules
 .env
 *.lnk
+
+/storage/chat/*
+!/storage/chat/.gitkeep

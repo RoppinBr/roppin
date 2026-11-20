@@ -11,4 +11,16 @@
     }
 
     loadEnv(__DIR__ . '/../../.env');
+
+    $roppinTimezone = trim((string) getenv('APP_TIMEZONE'));
+    if ($roppinTimezone === '' || !in_array($roppinTimezone, timezone_identifiers_list(), true)) {
+        $roppinTimezone = 'America/Sao_Paulo';
+    }
+    date_default_timezone_set($roppinTimezone);
+    unset($roppinTimezone);
+
+    function chatEnabled(): bool {
+        $valor = strtolower(trim((string) getenv('CHAT_ENABLED')));
+        return $valor === '' || !in_array($valor, ['0', 'false', 'off', 'no'], true);
+    }
 ?>

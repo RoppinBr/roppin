@@ -5,5 +5,22 @@ class Message extends Model
 {
     public static function table(): string { return 'Mensagem'; }
     public static function primaryKey(): string { return 'idMensagem'; }
-    public static function fields(): array { return ['idMensagem', 'textoMensagem', 'data', 'hora', 'idRemetente', 'idDestinatario']; }
+    public static function fields(): array
+    {
+        return [
+            'idMensagem',
+            'idConversa',
+            'tipoRemetente',
+            'canal',
+            'idExterno',
+            'criptografia',
+            'textoMensagem',
+            'data',
+            'hora',
+            'metadados',
+            'criadoEm',
+            'idRemetente',
+            'idDestinatario'
+        ];
+    }
 }

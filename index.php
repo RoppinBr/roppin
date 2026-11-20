@@ -1,12 +1,24 @@
 <?php
 require_once __DIR__ . '/src/scripts/auth_session.php';
 startRoppinSession();
+
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$usuarioLogado = isset($_SESSION['usuario_logado']) && $_SESSION['usuario_logado'] instanceof User
+    ? $_SESSION['usuario_logado']
+    : null;
+$chatAtivo = chatEnabled();
+$chatDisponivel = $chatAtivo && $usuarioLogado !== null;
+$csrfToken = $_SESSION['csrf_token'];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>">
     <title>Roppin - Seu marketplace inteligente</title>
 
     <link rel="icon" type="image/png" href="images/roppin_Logo.png">
@@ -22,10 +34,10 @@ startRoppinSession();
     <link rel="stylesheet" href="src/stylesheets/index.css">
     
 </head>
-<body class="bg-gray-100 text-gray-800 scroll-smooth">
+<body class="bg-gray-100 text-gray-800 scroll-smooth" data-chat-endpoint="processar.php">
 
 <div id="auth-modal" class="modal-overlay">
-    <div class="modal-content relative text-center">
+    <div data-tour="auth-card" class="modal-content relative text-center">
         <!-- Botão Fechar -->
         <button onclick="fecharModal()" class="absolute top-4 right-4 text-gray-500 hover:text-red-700 transition-colors">
             <i class="fas fa-times text-xl"></i>
@@ -50,7 +62,7 @@ startRoppinSession();
             <button type="submit" class="bg-red-700 text-white px-6 py-3 rounded-full font-bold hover:bg-red-800 transition-colors button-animate">
                 Entrar
             </button>
-            <p class="text-gray-600 mt-4">Ainda não tem conta? <a href="#" onclick="alternarFormulario('cadastro')" class="text-red-700 font-bold hover:underline">Cadastre-se</a></p>
+            <p class="text-gray-600 mt-4">Ainda não tem conta? <a href="#" data-tour="register" onclick="alternarFormulario('cadastro')" class="text-red-700 font-bold hover:underline">Cadastre-se</a></p>
         </form>
 
         <form id="forgot-password-form" class="hidden flex flex-col space-y-4">
@@ -63,13 +75,6 @@ startRoppinSession();
         </form>
 
         <form id="register-form" class="hidden flex flex-col space-y-4">
-            <div class="flex items-center justify-center space-x-2 mb-2 w-full text-gray-700">
-                <span class="font-medium text-base whitespace-nowrap">Sou</span>
-                <select name="tipo_usuario" class="flex-1 bg-white border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
-                    <option value="cliente" selected>Cliente</option>
-                    <option value="prestador">Prestador</option>
-                </select>
-            </div>
             <input type="text" name="nome" placeholder="Nome Completo" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500">
             <div class="mb-2">
                 <input type="text" id="documento" name="documento" placeholder="CPF ou CNPJ" required class="w-full border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-red-500 uppercase">
@@ -102,6 +107,14 @@ startRoppinSession();
             <i class="fas fa-users mr-3"></i> Depoimentos</a></li>
         <li><a href="#contato" class="text-white hover:text-red-300 font-semibold p-2 block transition-colors rounded">
             <i class="fas fa-headset mr-3"></i> Ajuda</a></li>
+        <?php if ($chatDisponivel): ?>
+            <li>
+                <a href="src/pages/mensagens.php" class="flex items-center justify-between gap-2 rounded p-2 font-semibold text-white transition-colors hover:text-red-300">
+                    <span><i class="fas fa-comments mr-3"></i> Mensagens</span>
+                    <span data-chat-unread-badge class="hidden min-w-5 rounded-full bg-white px-1.5 py-0.5 text-center text-[10px] font-bold text-red-700" aria-label="0 mensagens não lidas">0</span>
+                </a>
+            </li>
+        <?php endif; ?>
     </ul>
 
     <div class="mt-auto pt-6 border-t border-red-600">
@@ -133,7 +146,7 @@ startRoppinSession();
 
         <?php else: ?>
             
-            <button onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-white text-red-700 px-4 py-2 rounded-full font-bold text-sm text-center block hover:bg-gray-200 button-animate w-full">
+            <button data-tour="login" onclick="document.getElementById('auth-modal').style.display='flex'" class="bg-white text-red-700 px-4 py-2 rounded-full font-bold text-sm text-center block hover:bg-gray-200 button-animate w-full">
                 Acessar Plataforma
             </button>
 
@@ -158,13 +171,19 @@ startRoppinSession();
                          <a href="src/pages/conta.php" role="menuitem" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-800 hover:bg-red-50 hover:text-red-700">
                              <i class="fas fa-user-pen w-4 text-center" aria-hidden="true"></i> Editar cadastro
                          </a>
+                         <?php if ($chatDisponivel): ?>
+                             <a href="src/pages/mensagens.php" role="menuitem" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-800 hover:bg-red-50 hover:text-red-700">
+                                 <i class="fas fa-comments w-4 text-center" aria-hidden="true"></i> Mensagens
+                                 <span data-chat-unread-badge class="hidden ml-auto min-w-5 rounded-full bg-red-700 px-1.5 py-0.5 text-center text-[10px] font-bold text-white" aria-label="0 mensagens não lidas">0</span>
+                             </a>
+                         <?php endif; ?>
                          <button type="button" role="menuitem" class="js-logout-button flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-red-50 hover:text-red-700">
                              <i class="fas fa-right-from-bracket w-4 text-center" aria-hidden="true"></i> Sair
                          </button>
                      </div>
                  </div>
              <?php else: ?>
-                 <button onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white text-sm font-semibold px-3 py-1 rounded hover:bg-red-600 transition-colors">
+                 <button data-tour="login" onclick="document.getElementById('auth-modal').style.display='flex'" class="text-white text-sm font-semibold px-3 py-1 rounded hover:bg-red-600 transition-colors">
                      LOGIN
                  </button>
              <?php endif; ?>
@@ -180,6 +199,14 @@ startRoppinSession();
         <li><a href="#diferenciais" class="text-white hover:text-red-300 font-semibold">Vantagens Roppin</a></li>
         <li><a href="#clientes" class="text-white hover:text-red-300 font-semibold">Depoimentos</a></li>
         <li><a href="#contato" class="text-white hover:text-red-300 font-semibold">Ajuda</a></li>
+        <?php if ($chatDisponivel): ?>
+            <li>
+                <a href="src/pages/mensagens.php" class="flex items-center justify-between gap-2 font-semibold text-white hover:text-red-300">
+                    <span><i class="fas fa-comments mr-2" aria-hidden="true"></i> Mensagens</span>
+                    <span data-chat-unread-badge class="hidden min-w-5 rounded-full bg-white px-1.5 py-0.5 text-center text-[10px] font-bold text-red-700" aria-label="0 mensagens não lidas">0</span>
+                </a>
+            </li>
+        <?php endif; ?>
     </ul>
 </header>
 
@@ -204,11 +231,14 @@ startRoppinSession();
             </p>
             
             <!-- Barra de Busca IA -->
-            <div class="mt-4 flex w-full items-center gap-2 rounded-xl bg-white p-2 shadow-2xl md:rounded-full">
-                <input type="text" placeholder="O que você precisa?" aria-label="O que você precisa hoje?" class="min-w-0 flex-1 bg-transparent border-none focus:outline-none px-3 py-3 text-gray-800 text-base placeholder-gray-500">
-                <button id="ai-search-button" type="button" title="Buscar com IA" aria-label="Buscar com IA" class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-red-700 text-white font-bold hover:bg-red-800 transition-colors button-animate md:w-auto md:rounded-full md:px-6">
-                    <i class="fas fa-magnifying-glass md:mr-2" aria-hidden="true"></i><span class="hidden md:inline">Buscar com IA</span>
-                </button>
+            <div data-tour="search" class="relative mt-4 w-full">
+                <div class="flex w-full items-center gap-2 rounded-xl bg-white p-2 shadow-2xl md:rounded-full">
+                    <input type="text" placeholder="O que você precisa?" aria-label="O que você precisa hoje?" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="search-suggestions" aria-autocomplete="list" class="min-w-0 flex-1 bg-transparent border-none focus:outline-none px-3 py-3 text-gray-800 text-base placeholder-gray-500">
+                    <button id="ai-search-button" data-tour="search-button" type="button" title="Buscar com IA" aria-label="Buscar com IA" class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-red-700 text-white font-bold hover:bg-red-800 transition-colors button-animate md:w-auto md:rounded-full md:px-6">
+                        <i class="fas fa-magnifying-glass md:mr-2" aria-hidden="true"></i><span class="hidden md:inline">Buscar com IA</span>
+                    </button>
+                </div>
+                <div id="search-suggestions" role="listbox" aria-label="Sugestões de busca" class="absolute left-0 right-0 top-full z-30 mt-2 hidden overflow-hidden rounded-xl bg-white text-left text-gray-800 shadow-2xl"></div>
             </div>
 
             <div class="mt-8">
@@ -724,22 +754,147 @@ startRoppinSession();
 
         const aiSearchButton = document.getElementById('ai-search-button');
         const aiSearchInput = document.querySelector('#home input[aria-label="O que você precisa hoje?"]');
-        aiSearchButton.addEventListener('click', async () => {
+        const searchSuggestions = document.getElementById('search-suggestions');
+        const chatAvailable = <?php echo $chatDisponivel ? 'true' : 'false'; ?>;
+        const chatRequiresLogin = <?php echo ($chatAtivo && !$chatDisponivel) ? 'true' : 'false'; ?>;
+
+        let especialidadesCache = null;
+        let sugestoesAtuais = [];
+        let sugestaoSelecionada = -1;
+
+        function normalizarBusca(valor) {
+            return String(valor ?? '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, ' ')
+                .trim();
+        }
+
+        function mensagensUrl(busca) {
+            const url = new URL('src/pages/mensagens.php', window.location.href);
+            url.searchParams.set('novo', '1');
+            if (busca !== '') {
+                url.searchParams.set('q', busca);
+            }
+            return url.toString();
+        }
+
+        async function carregarEspecialidades() {
+            if (especialidadesCache) {
+                return especialidadesCache;
+            }
+
+            const formData = new FormData();
+            formData.append('acao', 'listar_especialidades');
+            const response = await fetch('processar.php', { method: 'POST', body: formData });
+            const dados = await response.json();
+
+            if (!response.ok || !dados.sucesso || !Array.isArray(dados.especialidades)) {
+                throw new Error('Não foi possível carregar as especialidades.');
+            }
+
+            especialidadesCache = dados.especialidades;
+            return especialidadesCache;
+        }
+
+        function esconderSugestoes() {
+            searchSuggestions.classList.add('hidden');
+            searchSuggestions.replaceChildren();
+            sugestoesAtuais = [];
+            sugestaoSelecionada = -1;
+            aiSearchInput.setAttribute('aria-expanded', 'false');
+        }
+
+        function destacarSugestao() {
+            Array.from(searchSuggestions.children).forEach((item, index) => {
+                item.classList.toggle('bg-red-50', index === sugestaoSelecionada);
+                item.setAttribute('aria-selected', index === sugestaoSelecionada ? 'true' : 'false');
+            });
+        }
+
+        function renderizarSugestoes(nomes) {
+            sugestoesAtuais = nomes;
+            sugestaoSelecionada = -1;
+            searchSuggestions.replaceChildren();
+
+            if (nomes.length === 0) {
+                esconderSugestoes();
+                return;
+            }
+
+            nomes.forEach((nome) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.setAttribute('role', 'option');
+                item.setAttribute('aria-selected', 'false');
+                item.className = 'flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-gray-800 transition-colors hover:bg-red-50 focus:bg-red-50 focus:outline-none';
+
+                const icone = document.createElement('i');
+                icone.className = 'fas fa-magnifying-glass text-xs text-red-700';
+                icone.setAttribute('aria-hidden', 'true');
+
+                const texto = document.createElement('span');
+                texto.textContent = nome;
+
+                item.append(icone, texto);
+                item.addEventListener('click', () => {
+                    aiSearchInput.value = nome;
+                    esconderSugestoes();
+                    executarBusca();
+                });
+                searchSuggestions.append(item);
+            });
+
+            searchSuggestions.classList.remove('hidden');
+            aiSearchInput.setAttribute('aria-expanded', 'true');
+        }
+
+        async function atualizarSugestoes() {
+            const termo = normalizarBusca(aiSearchInput.value);
+            if (termo === '') {
+                esconderSugestoes();
+                return;
+            }
+
+            try {
+                const especialidades = await carregarEspecialidades();
+                const encontradas = especialidades
+                    .map((especialidade) => String(especialidade.nomeEspecialidade ?? ''))
+                    .filter((nome, index, lista) =>
+                        nome !== '' &&
+                        lista.indexOf(nome) === index &&
+                        normalizarBusca(nome).includes(termo)
+                    )
+                    .slice(0, 8);
+                renderizarSugestoes(encontradas);
+            } catch (error) {
+                esconderSugestoes();
+            }
+        }
+
+        async function executarBusca() {
+            const busca = aiSearchInput.value.trim();
+
+            if (chatAvailable) {
+                window.location.href = mensagensUrl(busca);
+                return;
+            }
+
+            if (chatRequiresLogin) {
+                sessionStorage.setItem('destino_pos_login', mensagensUrl(busca));
+                document.getElementById('auth-modal').style.display = 'flex';
+                alternarFormulario('login');
+                mostrarNotificacao('Entre na sua conta para conversar com profissionais.', false);
+                return;
+            }
+
             toggleLoader(true);
             try {
-                const formData = new FormData();
-                formData.append('acao', 'listar_especialidades');
-                const response = await fetch('processar.php', { method: 'POST', body: formData });
-                const dados = await response.json();
-
-                if (!response.ok || !dados.sucesso) {
-                    window.alert('Não foi possível carregar as especialidades agora.');
-                    return;
-                }
-
-                const busca = aiSearchInput.value.trim().toLocaleLowerCase('pt-BR');
-                const encontradas = dados.especialidades.filter((especialidade) =>
-                    especialidade.nomeEspecialidade.toLocaleLowerCase('pt-BR').includes(busca)
+                const especialidades = await carregarEspecialidades();
+                const termo = normalizarBusca(busca);
+                const encontradas = especialidades.filter((especialidade) =>
+                    normalizarBusca(especialidade.nomeEspecialidade).includes(termo)
                 );
                 const resultado = encontradas.length
                     ? `Especialidades disponíveis:\n\n${encontradas.map((especialidade) => `• ${especialidade.nomeEspecialidade}`).join('\n')}`
@@ -749,6 +904,44 @@ startRoppinSession();
                 window.alert('Não foi possível carregar as especialidades agora.');
             } finally {
                 toggleLoader(false);
+            }
+        }
+
+        aiSearchButton.addEventListener('click', executarBusca);
+        aiSearchInput.addEventListener('input', atualizarSugestoes);
+        aiSearchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                esconderSugestoes();
+                return;
+            }
+
+            if (event.key === 'ArrowDown' && sugestoesAtuais.length > 0) {
+                event.preventDefault();
+                sugestaoSelecionada = (sugestaoSelecionada + 1) % sugestoesAtuais.length;
+                destacarSugestao();
+                return;
+            }
+
+            if (event.key === 'ArrowUp' && sugestoesAtuais.length > 0) {
+                event.preventDefault();
+                sugestaoSelecionada = sugestaoSelecionada <= 0
+                    ? sugestoesAtuais.length - 1
+                    : sugestaoSelecionada - 1;
+                destacarSugestao();
+                return;
+            }
+
+            if (event.key === 'Enter' && sugestaoSelecionada >= 0) {
+                event.preventDefault();
+                const escolhida = sugestoesAtuais[sugestaoSelecionada];
+                aiSearchInput.value = escolhida;
+                esconderSugestoes();
+                executarBusca();
+            }
+        });
+        document.addEventListener('click', (event) => {
+            if (!searchSuggestions.contains(event.target) && !aiSearchButton.contains(event.target) && event.target !== aiSearchInput) {
+                esconderSugestoes();
             }
         });
 
@@ -790,6 +983,16 @@ startRoppinSession();
             }
         });
         
+        function irParaDestinoPosAuth() {
+            const destino = sessionStorage.getItem('destino_pos_login');
+            if (destino) {
+                sessionStorage.removeItem('destino_pos_login');
+                window.location.href = destino;
+                return true;
+            }
+            return false;
+        }
+
         const loginForm = document.getElementById("login-form");
         if (loginForm) {
             loginForm.addEventListener("submit", function (e) {
@@ -815,9 +1018,11 @@ startRoppinSession();
                             sucesso: dados.sucesso
                         }));
 
-                        if (typeof fecharModal === "function") fecharModal(); 
-                        
-                        window.location.reload();
+                        if (typeof fecharModal === "function") fecharModal();
+
+                        if (!irParaDestinoPosAuth()) {
+                            window.location.reload();
+                        }
                     } else {
                         mostrarNotificacao(dados.mensagem, dados.sucesso);
                     }
@@ -855,9 +1060,11 @@ startRoppinSession();
                             sucesso: dados.sucesso
                         }));
 
-                        if (typeof fecharModal === "function") fecharModal(); 
-                        
-                        // window.location.href = "src/pages/conta.php";
+                        if (typeof fecharModal === "function") fecharModal();
+
+                        if (!irParaDestinoPosAuth()) {
+                            window.location.reload();
+                        }
                     } else {
                         mostrarNotificacao(dados.mensagem, dados.sucesso);
                     }
@@ -907,9 +1114,316 @@ startRoppinSession();
             });
         });
 
+        // Tutorial de boas-vindas: exibido apenas na primeira visita.
+        (function iniciarTutorial() {
+            const COOKIE = 'roppin_tutorial_visto';
+            const forcar = new URLSearchParams(window.location.search).get('tour') === '1';
+
+            const jaViu = document.cookie.split('; ').some((item) => item.startsWith(COOKIE + '='));
+            if (jaViu && !forcar) {
+                return;
+            }
+
+            const etapas = [
+                {
+                    titulo: 'Bem-vindo à Roppin',
+                    texto: 'Em 4 passos você aprende a entrar na plataforma, criar sua conta, buscar um serviço e iniciar uma conversa com um profissional.',
+                    alvo: null
+                },
+                {
+                    titulo: '1. Entre na sua conta',
+                    texto: 'Clique em “Acessar Plataforma” (desktop) ou “LOGIN” (celular). Informe seu e-mail e senha e clique em “Entrar”.',
+                    alvo: 'login'
+                },
+                {
+                    titulo: '2. Crie sua conta',
+                    texto: 'Ainda não tem conta? Neste card de acesso, clique em “Cadastre-se” no fim do formulário, preencha os dados e clique em “Criar Conta”.',
+                    alvo: 'auth-card',
+                    abrirModal: true
+                },
+                {
+                    titulo: '3. Busque um serviço',
+                    texto: 'Olhe o que acontece no campo de busca: ao digitar “Eletricista”, as sugestões aparecem sozinhas. Na sua vez, digite o que precisa e clique em “Buscar com IA”.',
+                    alvo: 'search',
+                    digitarExemplo: true
+                },
+                {
+                    titulo: '4. Inicie uma conversa',
+                    texto: 'Você será levado à página de mensagens. Escolha um profissional na lista e clique em “Conversar”. Depois é só escrever e enviar a primeira mensagem.',
+                    alvo: 'search-button'
+                }
+            ];
+
+            let indice = 0;
+            let timerDigitacao = null;
+            const valorOriginalBusca = aiSearchInput.value;
+
+            const raiz = document.createElement('div');
+            raiz.id = 'roppin-tutorial';
+            raiz.innerHTML = `
+                <div data-tour-fundo style="position:fixed;inset:0;z-index:999"></div>
+                <div data-tour-holo style="position:fixed;z-index:1000;pointer-events:none;display:none;transition:all .25s ease"></div>
+                <div data-tour-card role="dialog" aria-modal="true" aria-labelledby="roppin-tutorial-titulo" style="position:fixed;left:16px;top:16px;z-index:1001;width:calc(100% - 32px);max-width:520px;background:#fff;border-radius:16px;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.35);text-align:left">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px">
+                        <span data-tour-progresso style="font-size:12px;font-weight:800;color:#b91c1c;text-transform:uppercase;letter-spacing:.05em"></span>
+                        <button type="button" data-tour-fechar aria-label="Fechar tutorial" style="border:0;background:transparent;color:#6b7280;font-size:22px;line-height:1;cursor:pointer">&times;</button>
+                    </div>
+                    <h2 id="roppin-tutorial-titulo" data-tour-titulo style="font-size:20px;font-weight:800;color:#111827;margin:0 0 8px"></h2>
+                    <p data-tour-texto style="font-size:14px;line-height:1.5;color:#4b5563;margin:0 0 16px"></p>
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                        <button type="button" data-tour-voltar style="border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:9999px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer">Voltar</button>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <button type="button" data-tour-pular style="border:0;background:transparent;color:#6b7280;font-size:14px;font-weight:600;cursor:pointer">Pular</button>
+                            <button type="button" data-tour-proximo style="border:0;background:#b91c1c;color:#fff;border-radius:9999px;padding:8px 20px;font-size:14px;font-weight:700;cursor:pointer">Próximo</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.appendChild(raiz);
+
+            const holo = raiz.querySelector('[data-tour-holo]');
+            const card = raiz.querySelector('[data-tour-card]');
+            const titulo = raiz.querySelector('[data-tour-titulo]');
+            const texto = raiz.querySelector('[data-tour-texto]');
+            const progresso = raiz.querySelector('[data-tour-progresso]');
+            const botaoVoltar = raiz.querySelector('[data-tour-voltar]');
+            const botaoProximo = raiz.querySelector('[data-tour-proximo]');
+            const botaoPular = raiz.querySelector('[data-tour-pular]');
+            const botaoFechar = raiz.querySelector('[data-tour-fechar]');
+
+            function visivel(elemento) {
+                if (!elemento) {
+                    return false;
+                }
+                const estilo = getComputedStyle(elemento);
+                const rect = elemento.getBoundingClientRect();
+                return estilo.display !== 'none' && estilo.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+            }
+
+            function posicionarCartao(rect) {
+                const margem = 16;
+                const distancia = 18;
+                const larguraTela = window.innerWidth;
+                const alturaTela = window.innerHeight;
+                const candidatos = [];
+
+                [520, 360].forEach((larguraDesejada) => {
+                    const largura = Math.min(larguraDesejada, larguraTela - margem * 2);
+                    card.style.width = largura + 'px';
+                    const altura = card.offsetHeight;
+
+                    const posicoes = rect
+                        ? [
+                            [rect.left + rect.width / 2 - largura / 2, rect.bottom + distancia],
+                            [rect.left + rect.width / 2 - largura / 2, rect.top - distancia - altura],
+                            [rect.right + distancia, rect.top + rect.height / 2 - altura / 2],
+                            [rect.left - distancia - largura, rect.top + rect.height / 2 - altura / 2],
+                            [margem, margem],
+                            [larguraTela - largura - margem, margem],
+                            [margem, alturaTela - altura - margem],
+                            [larguraTela - largura - margem, alturaTela - altura - margem]
+                        ]
+                        : [[(larguraTela - largura) / 2, (alturaTela - altura) / 2]];
+
+                    posicoes.forEach((posicao) => {
+                        candidatos.push({ left: posicao[0], top: posicao[1], largura, altura });
+                    });
+                });
+
+                const pontuacao = (candidato) => {
+                    let sobreposicao = 0;
+                    if (rect) {
+                        const x = Math.max(0, Math.min(candidato.left + candidato.largura, rect.right) - Math.max(candidato.left, rect.left));
+                        const y = Math.max(0, Math.min(candidato.top + candidato.altura, rect.bottom) - Math.max(candidato.top, rect.top));
+                        sobreposicao = x * y;
+                    }
+
+                    const fora =
+                        Math.max(0, margem - candidato.left) +
+                        Math.max(0, candidato.left + candidato.largura - (larguraTela - margem)) +
+                        Math.max(0, margem - candidato.top) +
+                        Math.max(0, candidato.top + candidato.altura - (alturaTela - margem));
+
+                    const preferenciaTopo = rect && candidato.top > alturaTela / 2 ? 20000 : 0;
+                    return fora * 1000000 + sobreposicao + preferenciaTopo;
+                };
+
+                let melhor = candidatos[0];
+                let melhorPontuacao = pontuacao(melhor);
+                candidatos.slice(1).forEach((candidato) => {
+                    const atual = pontuacao(candidato);
+                    if (atual < melhorPontuacao) {
+                        melhor = candidato;
+                        melhorPontuacao = atual;
+                    }
+                });
+
+                card.style.width = melhor.largura + 'px';
+                card.style.left = Math.max(margem, melhor.left) + 'px';
+                card.style.top = Math.max(margem, melhor.top) + 'px';
+            }
+
+            function destacar(nome) {
+                if (!nome) {
+                    holo.style.display = 'block';
+                    holo.style.left = '0';
+                    holo.style.top = '0';
+                    holo.style.width = '100vw';
+                    holo.style.height = '100vh';
+                    holo.style.border = '0';
+                    holo.style.borderRadius = '0';
+                    holo.style.background = 'rgba(0,0,0,.68)';
+                    holo.style.boxShadow = 'none';
+                    posicionarCartao(null);
+                    return;
+                }
+
+                const candidatos = Array.from(document.querySelectorAll('[data-tour="' + nome + '"]'));
+                const alvo = candidatos.find(visivel) || candidatos[0];
+                if (!visivel(alvo)) {
+                    destacar(null);
+                    return;
+                }
+
+                const rect = alvo.getBoundingClientRect();
+                const espaco = 8;
+                holo.style.display = 'block';
+                holo.style.left = Math.max(4, rect.left - espaco) + 'px';
+                holo.style.top = Math.max(4, rect.top - espaco) + 'px';
+                holo.style.width = rect.width + espaco * 2 + 'px';
+                holo.style.height = rect.height + espaco * 2 + 'px';
+                holo.style.border = '2px solid #fff';
+                holo.style.borderRadius = '14px';
+                holo.style.background = 'transparent';
+                holo.style.boxShadow = '0 0 0 3px #b91c1c, 0 0 0 9999px rgba(0,0,0,.68)';
+                posicionarCartao(rect);
+            }
+
+            function pararDigitacao() {
+                if (timerDigitacao !== null) {
+                    window.clearInterval(timerDigitacao);
+                    timerDigitacao = null;
+                }
+            }
+
+            function digitarExemplo() {
+                pararDigitacao();
+                const exemplo = 'Eletricista';
+                let posicao = 0;
+                aiSearchInput.value = '';
+                timerDigitacao = window.setInterval(() => {
+                    posicao += 1;
+                    aiSearchInput.value = exemplo.slice(0, posicao);
+                    aiSearchInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+                    if (posicao >= exemplo.length) {
+                        pararDigitacao();
+                        if (etapas[indice] && etapas[indice].alvo === 'search') {
+                            window.setTimeout(() => destacar('search'), 0);
+                        }
+                    }
+                }, 110);
+            }
+
+            function render() {
+                const etapa = etapas[indice];
+                pararDigitacao();
+                titulo.textContent = etapa.titulo;
+                texto.textContent = etapa.texto;
+                progresso.textContent = 'Passo ' + (indice + 1) + ' de ' + etapas.length;
+                botaoVoltar.style.visibility = indice === 0 ? 'hidden' : 'visible';
+                botaoProximo.textContent = indice === etapas.length - 1 ? 'Concluir' : 'Próximo';
+
+                if (etapa.abrirModal) {
+                    document.getElementById('auth-modal').style.display = 'flex';
+                    if (typeof alternarFormulario === 'function') {
+                        alternarFormulario('login');
+                    }
+                }
+
+                window.setTimeout(() => destacar(etapa.alvo), 0);
+                if (etapa.digitarExemplo) {
+                    digitarExemplo();
+                }
+            }
+
+            function finalizar() {
+                pararDigitacao();
+                if (typeof fecharModal === 'function') {
+                    fecharModal();
+                }
+                if (valorOriginalBusca !== '') {
+                    aiSearchInput.value = valorOriginalBusca;
+                    aiSearchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                } else if (typeof esconderSugestoes === 'function') {
+                    esconderSugestoes();
+                }
+                const seguro = window.location.protocol === 'https:' ? '; Secure' : '';
+                document.cookie = COOKIE + '=1; Path=/; Max-Age=31536000; SameSite=Lax' + seguro;
+                raiz.remove();
+                document.removeEventListener('keydown', aoTeclar);
+                window.removeEventListener('resize', redesenhar);
+            }
+
+            function proximo() {
+                if (indice === etapas.length - 1) {
+                    finalizar();
+                    return;
+                }
+                if (etapas[indice].abrirModal && typeof fecharModal === 'function') {
+                    fecharModal();
+                }
+                if (etapas[indice].digitarExemplo && typeof esconderSugestoes === 'function') {
+                    esconderSugestoes();
+                }
+                indice += 1;
+                render();
+            }
+
+            function anterior() {
+                if (indice === 0) {
+                    return;
+                }
+                if (etapas[indice].abrirModal && typeof fecharModal === 'function') {
+                    fecharModal();
+                }
+                if (etapas[indice].digitarExemplo && typeof esconderSugestoes === 'function') {
+                    esconderSugestoes();
+                }
+                indice -= 1;
+                render();
+            }
+
+            function aoTeclar(event) {
+                if (event.key === 'Escape') {
+                    finalizar();
+                } else if (event.key === 'ArrowRight') {
+                    proximo();
+                } else if (event.key === 'ArrowLeft') {
+                    anterior();
+                }
+            }
+
+            function redesenhar() {
+                destacar(etapas[indice].alvo);
+            }
+
+            botaoProximo.addEventListener('click', proximo);
+            botaoVoltar.addEventListener('click', anterior);
+            botaoPular.addEventListener('click', finalizar);
+            botaoFechar.addEventListener('click', finalizar);
+            document.addEventListener('keydown', aoTeclar);
+            window.addEventListener('resize', redesenhar);
+            render();
+        })();
+
     });
 
 </script>
+
+<?php if ($chatDisponivel): ?>
+    <?php $chatBadgeVersion = is_file(__DIR__ . '/src/scripts/chat_badge.js') ? filemtime(__DIR__ . '/src/scripts/chat_badge.js') : 0; ?>
+    <script src="src/scripts/chat_badge.js?v=<?php echo $chatBadgeVersion; ?>" defer></script>
+<?php endif; ?>
 
 </body>
 </html>

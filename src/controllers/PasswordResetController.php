@@ -1,16 +1,20 @@
 <?php
 require_once __DIR__ . '/ControllerResponse.php';
 require_once __DIR__ . '/../repositories/PasswordResetTokenRepository.php';
+require_once __DIR__ . '/../repositories/UserRepository.php';
+require_once __DIR__ . '/../scripts/auth_session.php';
 require_once __DIR__ . '/../scripts/config.php';
 require_once __DIR__ . '/../scripts/password_reset_mailer.php';
 
 class PasswordResetController
 {
     private PasswordResetTokenRepository $tokens;
+    private ?UserRepository $users;
 
-    public function __construct(PasswordResetTokenRepository $tokens)
+    public function __construct(PasswordResetTokenRepository $tokens, ?UserRepository $users = null)
     {
         $this->tokens = $tokens;
+        $this->users = $users;
     }
 
     public function request(array $input): ControllerResponse
@@ -52,8 +56,30 @@ class PasswordResetController
             return new ControllerResponse(['sucesso' => false, 'mensagem' => 'Link inválido ou expirado. Solicite uma nova recuperação.'], 400);
         }
 
-        if (!$this->tokens->resetPassword($token, $senha)) {
+        $usuario = $this->tokens->resetPasswordWithUser($token, $senha);
+        if (!$usuario) {
             return new ControllerResponse(['sucesso' => false, 'mensagem' => 'Link inválido ou expirado. Solicite uma nova recuperação.'], 400);
+        }
+
+        if ($usuario['eraConvidado']) {
+            $conta = $this->users ? $this->users->findById((int) $usuario['idUsuario']) : false;
+            $conta = $conta ?: new User([
+                'idUsuario' => $usuario['idUsuario'],
+                'nome' => $usuario['nome'],
+                'email' => $usuario['email'],
+                'ehConvidado' => 0
+            ]);
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
+            $_SESSION['usuario_logado'] = $conta;
+            clearChatGuestCookie();
+
+            return new ControllerResponse([
+                'sucesso' => true,
+                'mensagem' => 'Conta criada! Suas conversas foram preservadas.',
+                'redirecionar' => '../../src/pages/mensagens.php'
+            ]);
         }
 
         return new ControllerResponse(['sucesso' => true, 'mensagem' => 'Senha redefinida. Você já pode entrar com a nova senha.']);

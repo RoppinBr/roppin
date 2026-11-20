@@ -10,7 +10,7 @@ $usuarioLogado = isset($_SESSION['usuario_logado']) && $_SESSION['usuario_logado
     ? $_SESSION['usuario_logado']
     : null;
 $chatAtivo = chatEnabled();
-$chatDisponivel = $chatAtivo && $usuarioLogado !== null;
+$chatDisponivel = $chatAtivo;
 $csrfToken = $_SESSION['csrf_token'];
 ?>
 <!DOCTYPE html>
@@ -109,7 +109,7 @@ $csrfToken = $_SESSION['csrf_token'];
             <i class="fas fa-headset mr-3"></i> Ajuda</a></li>
         <?php if ($chatDisponivel): ?>
             <li>
-                <a href="src/pages/mensagens.php" class="flex items-center justify-between gap-2 rounded p-2 font-semibold text-white transition-colors hover:text-red-300">
+                <a href="src/pages/mensagens.php" data-tour="mensagens" class="flex items-center justify-between gap-2 rounded p-2 font-semibold text-white transition-colors hover:text-red-300">
                     <span><i class="fas fa-comments mr-3"></i> Mensagens</span>
                     <span data-chat-unread-badge class="hidden min-w-5 rounded-full bg-white px-1.5 py-0.5 text-center text-[10px] font-bold text-red-700" aria-label="0 mensagens não lidas">0</span>
                 </a>
@@ -172,7 +172,7 @@ $csrfToken = $_SESSION['csrf_token'];
                              <i class="fas fa-user-pen w-4 text-center" aria-hidden="true"></i> Editar cadastro
                          </a>
                          <?php if ($chatDisponivel): ?>
-                             <a href="src/pages/mensagens.php" role="menuitem" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-800 hover:bg-red-50 hover:text-red-700">
+                             <a href="src/pages/mensagens.php" data-tour="mensagens" role="menuitem" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-800 hover:bg-red-50 hover:text-red-700">
                                  <i class="fas fa-comments w-4 text-center" aria-hidden="true"></i> Mensagens
                                  <span data-chat-unread-badge class="hidden ml-auto min-w-5 rounded-full bg-red-700 px-1.5 py-0.5 text-center text-[10px] font-bold text-white" aria-label="0 mensagens não lidas">0</span>
                              </a>
@@ -201,7 +201,7 @@ $csrfToken = $_SESSION['csrf_token'];
         <li><a href="#contato" class="text-white hover:text-red-300 font-semibold">Ajuda</a></li>
         <?php if ($chatDisponivel): ?>
             <li>
-                <a href="src/pages/mensagens.php" class="flex items-center justify-between gap-2 font-semibold text-white hover:text-red-300">
+                <a href="src/pages/mensagens.php" data-tour="mensagens" class="flex items-center justify-between gap-2 font-semibold text-white hover:text-red-300">
                     <span><i class="fas fa-comments mr-2" aria-hidden="true"></i> Mensagens</span>
                     <span data-chat-unread-badge class="hidden min-w-5 rounded-full bg-white px-1.5 py-0.5 text-center text-[10px] font-bold text-red-700" aria-label="0 mensagens não lidas">0</span>
                 </a>
@@ -1127,30 +1127,37 @@ $csrfToken = $_SESSION['csrf_token'];
             const etapas = [
                 {
                     titulo: 'Bem-vindo à Roppin',
-                    texto: 'Em 4 passos você aprende a entrar na plataforma, criar sua conta, buscar um serviço e iniciar uma conversa com um profissional.',
-                    alvo: null
+                    texto: 'Em 5 passos você vê como usar a Roppin, do login à conversa com um profissional.',
+                    alvo: null,
+                    boasVindas: true
                 },
                 {
                     titulo: '1. Entre na sua conta',
-                    texto: 'Clique em “Acessar Plataforma” (desktop) ou “LOGIN” (celular). Informe seu e-mail e senha e clique em “Entrar”.',
+                    texto: 'Clique em “Acessar Plataforma” ou “LOGIN” no celular e entre com seu e-mail e senha.',
                     alvo: 'login'
                 },
                 {
                     titulo: '2. Crie sua conta',
-                    texto: 'Ainda não tem conta? Neste card de acesso, clique em “Cadastre-se” no fim do formulário, preencha os dados e clique em “Criar Conta”.',
+                    texto: 'Sem conta ainda? Clique em “Cadastre-se”, preencha seus dados e crie sua conta.',
                     alvo: 'auth-card',
                     abrirModal: true
                 },
                 {
                     titulo: '3. Busque um serviço',
-                    texto: 'Olhe o que acontece no campo de busca: ao digitar “Eletricista”, as sugestões aparecem sozinhas. Na sua vez, digite o que precisa e clique em “Buscar com IA”.',
+                    texto: 'Digite o serviço que você precisa. As sugestões aparecem enquanto você escreve. Depois, clique em “Buscar com IA”.',
                     alvo: 'search',
                     digitarExemplo: true
                 },
                 {
                     titulo: '4. Inicie uma conversa',
-                    texto: 'Você será levado à página de mensagens. Escolha um profissional na lista e clique em “Conversar”. Depois é só escrever e enviar a primeira mensagem.',
+                    texto: 'Escolha um serviço, clique em “Conversar” e envie sua mensagem.',
                     alvo: 'search-button'
+                },
+                {
+                    titulo: '5. Acompanhe as conversas',
+                    texto: 'Use “Mensagens” no menu para acompanhar e responder suas conversas.',
+                    alvo: 'mensagens',
+                    abrirMenu: true
                 }
             ];
 
@@ -1329,7 +1336,13 @@ $csrfToken = $_SESSION['csrf_token'];
                 pararDigitacao();
                 titulo.textContent = etapa.titulo;
                 texto.textContent = etapa.texto;
-                progresso.textContent = 'Passo ' + (indice + 1) + ' de ' + etapas.length;
+                const etapasNumeradas = etapas.filter((etapa) => !etapa.boasVindas);
+                if (etapa.boasVindas) {
+                    progresso.textContent = 'Introdução';
+                } else {
+                    const numero = etapas.slice(0, indice + 1).filter((item) => !item.boasVindas).length;
+                    progresso.textContent = 'Passo ' + numero + ' de ' + etapasNumeradas.length;
+                }
                 botaoVoltar.style.visibility = indice === 0 ? 'hidden' : 'visible';
                 botaoProximo.textContent = indice === etapas.length - 1 ? 'Concluir' : 'Próximo';
 
@@ -1338,6 +1351,9 @@ $csrfToken = $_SESSION['csrf_token'];
                     if (typeof alternarFormulario === 'function') {
                         alternarFormulario('login');
                     }
+                }
+                if (etapa.abrirMenu && navMenu) {
+                    navMenu.classList.add('active');
                 }
 
                 window.setTimeout(() => destacar(etapa.alvo), 0);
@@ -1348,6 +1364,9 @@ $csrfToken = $_SESSION['csrf_token'];
 
             function finalizar() {
                 pararDigitacao();
+                if (navMenu) {
+                    navMenu.classList.remove('active');
+                }
                 if (typeof fecharModal === 'function') {
                     fecharModal();
                 }
@@ -1375,6 +1394,9 @@ $csrfToken = $_SESSION['csrf_token'];
                 if (etapas[indice].digitarExemplo && typeof esconderSugestoes === 'function') {
                     esconderSugestoes();
                 }
+                if (etapas[indice].abrirMenu && navMenu) {
+                    navMenu.classList.remove('active');
+                }
                 indice += 1;
                 render();
             }
@@ -1388,6 +1410,9 @@ $csrfToken = $_SESSION['csrf_token'];
                 }
                 if (etapas[indice].digitarExemplo && typeof esconderSugestoes === 'function') {
                     esconderSugestoes();
+                }
+                if (etapas[indice].abrirMenu && navMenu) {
+                    navMenu.classList.remove('active');
                 }
                 indice -= 1;
                 render();

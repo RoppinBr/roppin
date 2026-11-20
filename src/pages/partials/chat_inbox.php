@@ -19,6 +19,8 @@ $pollMs = (int) ($pollMs ?? 5000);
 $openNew = (bool) ($openNew ?? false);
 $embedded = (bool) ($embedded ?? false);
 $initialQuery = trim((string) ($initialQuery ?? ''));
+$ehConvidado = (bool) ($ehConvidado ?? false);
+$chatTour = (bool) ($chatTour ?? false);
 $selectedName = $selectedConversation['outroNome'] ?? '';
 $selectedInitial = $initialOf($selectedName !== '' ? $selectedName : 'Conversa');
 $selectedReputation = $selectedConversation['outroReputacao'] ?? null;
@@ -35,15 +37,19 @@ $selectedCanSend = (bool) ($selectedConversation['podeEnviar'] ?? false);
     data-open-new="<?php echo $openNew ? '1' : '0'; ?>"
     data-initial-query="<?php echo $escape($initialQuery); ?>"
     data-poll-ms="<?php echo $pollMs; ?>"
+    data-guest="<?php echo $ehConvidado ? '1' : '0'; ?>"
+    data-tour-enabled="<?php echo $chatTour ? '1' : '0'; ?>"
+    data-demo-provider="<?php echo $chatTour ? '1' : '0'; ?>"
+    data-demo-query="Eletricista"
 >
     <div class="flex <?php echo $embedded ? 'h-[calc(100vh-24rem)] min-h-[480px]' : 'h-[calc(100vh-11rem)] min-h-[540px]'; ?>">
-        <aside id="chat-sidebar" class="flex w-full flex-col border-r border-gray-200 md:flex md:w-80 lg:w-96">
+        <aside id="chat-sidebar" data-tour="chat-sidebar" class="flex w-full flex-col border-r border-gray-200 md:flex md:w-80 lg:w-96">
             <div class="flex items-center justify-between gap-3 border-b border-gray-200 p-4">
                 <div class="min-w-0">
                     <h1 class="text-lg font-bold">Conversas</h1>
                     <p id="chat-conversation-count" class="text-xs text-gray-500"><?php echo count($conversations); ?> conversa(s)</p>
                 </div>
-                <button id="chat-new-button" type="button" class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-red-700 px-3 py-2 text-sm font-bold text-white hover:bg-red-800">
+                <button id="chat-new-button" data-tour="chat-new-button" type="button" class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-red-700 px-3 py-2 text-sm font-bold text-white hover:bg-red-800">
                     <i class="fas fa-plus" aria-hidden="true"></i>
                     <span class="hidden sm:inline">Nova</span>
                 </button>
@@ -94,7 +100,7 @@ $selectedCanSend = (bool) ($selectedConversation['podeEnviar'] ?? false);
             </div>
         </aside>
 
-        <section id="chat-main" class="hidden min-w-0 flex-1 flex-col md:flex">
+        <section id="chat-main" data-tour="chat-main" class="hidden min-w-0 flex-1 flex-col md:flex">
             <div id="chat-empty-state" class="flex flex-1 flex-col items-center justify-center p-8 text-center <?php echo $selectedConversation ? 'hidden' : ''; ?>">
                 <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-2xl text-red-700">
                     <i class="fas fa-comments" aria-hidden="true"></i>
@@ -192,7 +198,7 @@ $selectedCanSend = (bool) ($selectedConversation['podeEnviar'] ?? false);
                 </button>
             </div>
             <label for="chat-provider-search" class="sr-only">Buscar profissional</label>
-            <input id="chat-provider-search" type="search" autocomplete="off" placeholder="Buscar por nome ou especialidade" class="mt-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
+            <input id="chat-provider-search" data-tour="chat-provider-search" type="search" autocomplete="off" placeholder="Buscar por nome ou especialidade" class="mt-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-200">
         </header>
         <div id="chat-provider-list" class="min-h-0 flex-1 overflow-y-auto p-3">
             <p class="p-4 text-sm text-gray-500">Carregando profissionais...</p>

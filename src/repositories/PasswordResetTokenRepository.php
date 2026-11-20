@@ -7,17 +7,39 @@ class PasswordResetTokenRepository extends BaseRepository
     public function createForDocument(string $documento): array | false
     {
         $documento = strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', $documento));
+
+        try {
+            $statement = $this->db->prepare('SELECT idUsuario, COALESCE(NULLIF(nome, \'\'), razaoSocial) AS nome, email FROM Usuario WHERE cpf = ? OR cnpj = ? LIMIT 1');
+            $statement->bind_param('ss', $documento, $documento);
+            $usuario = $this->fetchOne($statement);
+        } catch (Throwable $e) {
+            error_log('PasswordResetTokenRepository::createForDocument -> ' . $e->getMessage());
+            return false;
+        }
+
+        return $usuario ? $this->issueForUser($usuario) : false;
+    }
+
+    public function createForUser(int $id): array | false
+    {
+        try {
+            $statement = $this->db->prepare('SELECT idUsuario, COALESCE(NULLIF(nome, \'\'), razaoSocial) AS nome, email FROM Usuario WHERE idUsuario = ? LIMIT 1');
+            $statement->bind_param('i', $id);
+            $usuario = $this->fetchOne($statement);
+        } catch (Throwable $e) {
+            error_log('PasswordResetTokenRepository::createForUser -> ' . $e->getMessage());
+            return false;
+        }
+
+        return $usuario ? $this->issueForUser($usuario) : false;
+    }
+
+    private function issueForUser(array $usuario): array | false
+    {
         $transacaoIniciada = false;
 
         try {
             $this->db->query('DELETE FROM PasswordResetTokens WHERE expira_em <= UTC_TIMESTAMP()');
-            $statement = $this->db->prepare('SELECT idUsuario, COALESCE(NULLIF(nome, \'\'), razaoSocial) AS nome, email FROM Usuario WHERE cpf = ? OR cnpj = ? LIMIT 1');
-            $statement->bind_param('ss', $documento, $documento);
-            $usuario = $this->fetchOne($statement);
-
-            if (!$usuario) {
-                return false;
-            }
 
             $limite = $this->db->prepare('SELECT id FROM PasswordResetTokens WHERE usuario_id = ? AND criado_em > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 MINUTE) LIMIT 1');
             $limite->bind_param('i', $usuario['idUsuario']);
@@ -47,7 +69,7 @@ class PasswordResetTokenRepository extends BaseRepository
             if ($transacaoIniciada) {
                 $this->db->rollback();
             }
-            error_log('PasswordResetTokenRepository::createForDocument -> ' . $e->getMessage());
+            error_log('PasswordResetTokenRepository::issueForUser -> ' . $e->getMessage());
             return false;
         }
     }
@@ -66,6 +88,11 @@ class PasswordResetTokenRepository extends BaseRepository
 
     public function resetPassword(string $token, string $senha): bool
     {
+        return $this->resetPasswordWithUser($token, $senha) !== false;
+    }
+
+    public function resetPasswordWithUser(string $token, string $senha): array | false
+    {
         $transacaoIniciada = false;
 
         try {
@@ -73,7 +100,13 @@ class PasswordResetTokenRepository extends BaseRepository
             $this->db->begin_transaction();
             $transacaoIniciada = true;
 
-            $consulta = $this->db->prepare('SELECT usuario_id FROM PasswordResetTokens WHERE token_hash = ? AND expira_em > UTC_TIMESTAMP() FOR UPDATE');
+            $consulta = $this->db->prepare(
+                'SELECT t.usuario_id, u.ehConvidado, COALESCE(NULLIF(u.nome, \'\'), u.razaoSocial) AS nome, u.email
+                 FROM PasswordResetTokens t
+                 JOIN Usuario u ON u.idUsuario = t.usuario_id
+                 WHERE t.token_hash = ? AND t.expira_em > UTC_TIMESTAMP()
+                 FOR UPDATE'
+            );
             $consulta->bind_param('s', $tokenHash);
             $reset = $this->fetchOne($consulta);
 
@@ -82,15 +115,15 @@ class PasswordResetTokenRepository extends BaseRepository
                 return false;
             }
 
+            $eraConvidado = (bool) $reset['ehConvidado'];
             $hashSenha = password_hash($senha, PASSWORD_DEFAULT);
-            $atualizar = $this->db->prepare('UPDATE Usuario SET senha = ? WHERE idUsuario = ?');
+            $atualizar = $this->db->prepare('UPDATE Usuario SET senha = ?, ehConvidado = 0 WHERE idUsuario = ?');
             $atualizar->bind_param('si', $hashSenha, $reset['usuario_id']);
             $atualizar->execute();
 
-            if ($atualizar->affected_rows !== 1) {
-                $this->db->rollback();
-                return false;
-            }
+            $removerSessoes = $this->db->prepare('DELETE FROM ChatConvidadoSessao WHERE idUsuario = ?');
+            $removerSessoes->bind_param('i', $reset['usuario_id']);
+            $removerSessoes->execute();
 
             $removerRememberMe = $this->db->prepare('DELETE FROM RememberMeTokens WHERE usuario_id = ?');
             $removerRememberMe->bind_param('i', $reset['usuario_id']);
@@ -101,12 +134,18 @@ class PasswordResetTokenRepository extends BaseRepository
             $remover->execute();
             $this->db->commit();
             $transacaoIniciada = false;
-            return true;
+
+            return [
+                'idUsuario' => (int) $reset['usuario_id'],
+                'nome' => (string) $reset['nome'],
+                'email' => (string) $reset['email'],
+                'eraConvidado' => $eraConvidado
+            ];
         } catch (Throwable $e) {
             if ($transacaoIniciada) {
                 $this->db->rollback();
             }
-            error_log('PasswordResetTokenRepository::resetPassword -> ' . $e->getMessage());
+            error_log('PasswordResetTokenRepository::resetPasswordWithUser -> ' . $e->getMessage());
             return false;
         }
     }

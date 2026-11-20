@@ -33,6 +33,9 @@ $chatMessages = [];
 $chatLastMessageId = 0;
 $chatOpenNew = ($_GET['novo'] ?? '') === '1';
 $chatInitialQuery = trim((string) ($_GET['q'] ?? ''));
+$chatTourForced = ($_GET['tour'] ?? '') === '1';
+$chatTourSeen = isset($_COOKIE['roppin_chat_tutorial_visto']);
+$chatTour = $chatTourForced || !$chatTourSeen;
 $chatError = null;
 $chatPollMs = max(3000, min(15000, (int) (getenv('CHAT_POLL_INTERVAL_MS') ?: 5000)));
 
@@ -816,6 +819,8 @@ $chatUnread = array_sum(array_map(
     <?php if (chatEnabled()): ?>
         <?php $chatJsVersion = is_file(__DIR__ . '/../scripts/chat.js') ? filemtime(__DIR__ . '/../scripts/chat.js') : 0; ?>
         <script src="../scripts/chat.js?v=<?php echo $chatJsVersion; ?>" defer></script>
+        <?php $chatTourJsVersion = is_file(__DIR__ . '/../scripts/chat_tour.js') ? filemtime(__DIR__ . '/../scripts/chat_tour.js') : 0; ?>
+        <script src="../scripts/chat_tour.js?v=<?php echo $chatTourJsVersion; ?>" defer></script>
     <?php endif; ?>
 </body>
 </html>

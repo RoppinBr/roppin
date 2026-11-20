@@ -7,7 +7,7 @@ class User extends Model
     public static function primaryKey(): string { return 'idUsuario'; }
     public static function fields(): array
     {
-        return ['idUsuario', 'idPessoa', 'tipoPessoa', 'cpf', 'nome', 'cnpj', 'razaoSocial', 'email', 'senha', 'media_reputacao'];
+        return ['idUsuario', 'idPessoa', 'tipoPessoa', 'cpf', 'nome', 'cnpj', 'razaoSocial', 'email', 'senha', 'media_reputacao', 'ehConvidado'];
     }
 
     public function __construct(array $attributes = [])
@@ -129,5 +129,10 @@ class User extends Model
     public function getMediaReputacao(): mixed
     {
         return $this->get('media_reputacao');
+    }
+
+    public function isGuest(): bool
+    {
+        return (bool) $this->get('ehConvidado');
     }
 }

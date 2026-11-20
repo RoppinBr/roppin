@@ -38,7 +38,8 @@ $rotas = [
     'chat_marcar_lida' => ['chat', 'read'],
     'chat_focar_conversa' => ['chat', 'focus'],
     'chat_limpar_foco' => ['chat', 'blur'],
-    'chat_nao_lidas' => ['chat', 'unread']
+    'chat_nao_lidas' => ['chat', 'unread'],
+    'chat_vincular_email' => ['chat_guest', 'linkEmail']
 ];
 
 if (!isset($rotas[$acao])) {
@@ -50,6 +51,8 @@ if (!isset($rotas[$acao])) {
 require_once __DIR__ . '/src/scripts/conexao.php';
 require_once __DIR__ . '/src/repositories/UserRepository.php';
 require_once __DIR__ . '/src/repositories/RememberMeTokenRepository.php';
+require_once __DIR__ . '/src/repositories/ChatGuestSessionRepository.php';
+require_once __DIR__ . '/src/repositories/ChatGuestTransferRepository.php';
 require_once __DIR__ . '/src/repositories/PasswordResetTokenRepository.php';
 require_once __DIR__ . '/src/repositories/SpecialtyRepository.php';
 require_once __DIR__ . '/src/repositories/ProviderRepository.php';
@@ -64,6 +67,7 @@ require_once __DIR__ . '/src/controllers/PasswordResetController.php';
 require_once __DIR__ . '/src/controllers/SpecialtyController.php';
 require_once __DIR__ . '/src/controllers/ProviderController.php';
 require_once __DIR__ . '/src/controllers/ChatController.php';
+require_once __DIR__ . '/src/controllers/ChatGuestController.php';
 
 $db = getConexao();
 if (!$db) {
@@ -74,6 +78,8 @@ if (!$db) {
 
 $users = new UserRepository($db);
 $rememberTokens = new RememberMeTokenRepository($db);
+$guestSessions = new ChatGuestSessionRepository($db);
+$guestTransfers = new ChatGuestTransferRepository($db);
 $tokens = new PasswordResetTokenRepository($db);
 $specialties = new SpecialtyRepository($db);
 $providers = new ProviderRepository($db);
@@ -84,12 +90,13 @@ $chatService = new ChatService(
     new ReviewRepository($db)
 );
 $controllers = [
-    'auth' => new AuthController($users, $rememberTokens),
+    'auth' => new AuthController($users, $rememberTokens, $guestSessions, $guestTransfers),
     'account' => new AccountController($users, $rememberTokens),
-    'password_reset' => new PasswordResetController($tokens),
+    'password_reset' => new PasswordResetController($tokens, $users),
     'specialty' => new SpecialtyController($specialties),
     'provider' => new ProviderController($providers, $specialties),
-    'chat' => new ChatController($chatService)
+    'chat' => new ChatController($chatService, $users, $guestSessions),
+    'chat_guest' => new ChatGuestController($users, $guestSessions, $tokens)
 ];
 [$controllerName, $method] = $rotas[$acao];
 

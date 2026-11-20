@@ -76,7 +76,7 @@ header('Cache-Control: no-store, private');
                     }
 
                     sessionStorage.setItem('notificacao_pos_reload', JSON.stringify(resultado));
-                    window.location.href = '../../index.php';
+                    window.location.href = resultado.redirecionar || '../../index.php';
                 } catch (error) {
                     resetMessage.textContent = 'Não foi possível redefinir a senha agora.';
                     resetMessage.className = 'mt-4 text-sm text-red-700';

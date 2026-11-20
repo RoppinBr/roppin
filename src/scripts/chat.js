@@ -9,6 +9,14 @@
     const endpoint = document.body.dataset.chatEndpoint || '../../processar.php';
     const csrfToken = app.dataset.csrf || '';
     const pollMs = Math.max(3000, Number(app.dataset.pollMs || 5000));
+    const guestBanner = document.getElementById('chat-guest-banner');
+
+    function revealGuestBanner() {
+        if (app.dataset.guest === '1' && guestBanner) {
+            guestBanner.classList.remove('hidden');
+        }
+    }
+
 
     const sidebar = document.getElementById('chat-sidebar');
     const main = document.getElementById('chat-main');
@@ -57,10 +65,16 @@
         changingState: false,
         reviewing: false,
         reviewNote: 0,
-        viewVersion: 0
+        viewVersion: 0,
+        conversaExemploAtiva: false
     };
 
     let pendingInitialQuery = app.dataset.initialQuery || '';
+    let demoMode = app.dataset.demoProvider === '1';
+    let ultimosPrestadores = [];
+    let snapshotExemplo = null;
+    let timerMensagensExemplo = null;
+    const demoQuery = app.dataset.demoQuery || 'Eletricista';
 
     const escapeHtml = (value) => String(value ?? '');
     const formatRating = (value) => Number(value).toFixed(1).replace('.', ',');
@@ -315,6 +329,28 @@
         }
     }
 
+    function conversaExemploItem() {
+        const item = document.createElement('a');
+        item.href = 'mensagens.php';
+        item.dataset.tour = 'chat-conversa-exemplo';
+        item.dataset.conversaExemplo = '1';
+        item.className = 'chat-conversation-item flex gap-3 border-b border-gray-100 bg-amber-50 px-4 py-3';
+        item.innerHTML = `
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-200 text-sm font-bold text-amber-900">E</span>
+            <span class="min-w-0 flex-1">
+                <span class="flex items-center justify-between gap-2">
+                    <span class="truncate text-sm font-semibold text-gray-900">Eletricista (exemplo)</span>
+                    <span class="shrink-0 text-[11px] text-gray-400">agora</span>
+                </span>
+                <span class="mt-0.5 flex items-center justify-between gap-2">
+                    <span class="truncate text-xs text-gray-500">Olá! Posso ajudar com sua instalação.</span>
+                    <span class="inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-red-700 px-1.5 py-0.5 text-[10px] font-bold text-white">1</span>
+                </span>
+            </span>`;
+        item.addEventListener('click', (event) => event.preventDefault());
+        return item;
+    }
+
     function renderConversations(conversations) {
         state.conversations = conversations;
         list.replaceChildren();
@@ -380,7 +416,15 @@
             });
         }
 
-        conversationCount.textContent = `${conversations.length} conversa(s)`;
+        if (state.conversaExemploAtiva) {
+            const empty = document.getElementById('chat-list-empty');
+            if (empty) {
+                empty.remove();
+            }
+            list.append(conversaExemploItem());
+        }
+
+        conversationCount.textContent = `${conversations.length + (state.conversaExemploAtiva ? 1 : 0)} conversa(s)`;
         updateActiveItem();
         applyConversationFilter();
     }
@@ -453,6 +497,9 @@
     }
 
     function renderMessages(messages, append = false) {
+        if (state.conversaExemploAtiva) {
+            return;
+        }
         if (!append) {
             messagesEl.replaceChildren();
         }
@@ -473,6 +520,10 @@
             if (messageId > 0 && rendered.has(messageId)) {
                 rendered.get(messageId).forEach((element) => element.remove());
                 rendered.delete(messageId);
+            }
+
+            if (!message.minha && message.tipo === 'usuario') {
+                revealGuestBanner();
             }
 
             const element = createMessageElement(message);
@@ -858,12 +909,21 @@
         providers.forEach((provider) => {
             const card = document.createElement('div');
             card.className = 'flex items-center gap-3 rounded-lg border border-gray-100 p-3';
+            if (provider.exemplo) {
+                card.dataset.tour = 'chat-provider-exemplo';
+            }
 
             const details = document.createElement('div');
             details.className = 'min-w-0 flex-1';
             const name = document.createElement('p');
             name.className = 'truncate text-sm font-semibold text-gray-900';
             name.textContent = provider.nome || 'Profissional';
+            if (provider.exemplo) {
+                const badge = document.createElement('span');
+                badge.className = 'ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800';
+                badge.textContent = 'Exemplo';
+                name.append(badge);
+            }
             const specialties = document.createElement('p');
             specialties.className = 'truncate text-xs text-gray-500';
             specialties.textContent = provider.especialidades || 'Especialidade não informada';
@@ -877,7 +937,15 @@
             button.type = 'button';
             button.className = 'shrink-0 rounded-lg bg-red-700 px-3 py-2 text-xs font-bold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60';
             button.textContent = 'Conversar';
-            button.addEventListener('click', () => startConversation(Number(provider.idUsuario), button));
+            if (provider.exemplo) {
+                button.addEventListener('click', () => {
+                    if (typeof window.roppinChatConversaExemplo === 'function') {
+                        window.roppinChatConversaExemplo(true);
+                    }
+                });
+            } else {
+                button.addEventListener('click', () => startConversation(Number(provider.idUsuario), button));
+            }
 
             card.append(avatar(provider.nome), details, button);
             providerList.append(card);
@@ -887,7 +955,24 @@
     async function loadProviders(searchTerm) {
         try {
             const result = await post('chat_listar_prestadores', { busca: searchTerm });
-            renderProviders(result.prestadores || []);
+            const providers = demoMode ? [] : (Array.isArray(result.prestadores) ? [...result.prestadores] : []);
+            ultimosPrestadores = Array.isArray(result.prestadores) ? [...result.prestadores] : [];
+            const termo = normalize(searchTerm);
+            const exemplo = normalize(demoQuery);
+
+            if (demoMode && (termo === '' || exemplo.includes(termo))) {
+                providers.unshift({
+                    idUsuario: 0,
+                    nome: demoQuery,
+                    especialidades: 'Profissional fictício usado apenas no tour do chat',
+                    valor: null,
+                    periodo_cobranca: '',
+                    reputacao: null,
+                    exemplo: true
+                });
+            }
+
+            renderProviders(providers);
         } catch (error) {
             providerList.replaceChildren();
             const message = document.createElement('p');
@@ -1002,10 +1087,137 @@
         setMobileView(false);
     }
 
-    if (app.dataset.openNew === '1') {
+    if (app.dataset.openNew === '1' && app.dataset.tourEnabled !== '1') {
         openNewModal();
     }
 
     refreshInbox();
     state.inboxTimer = window.setInterval(refreshInbox, 20000);
+
+    function garantirAnimacaoExemplo() {
+        if (document.getElementById('roppin-demo-animacao')) {
+            return;
+        }
+        const style = document.createElement('style');
+        style.id = 'roppin-demo-animacao';
+        style.textContent = '@keyframes roppin-demo-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.roppin-demo-msg{animation:roppin-demo-fade .35s ease both}';
+        document.head.append(style);
+    }
+
+    function mostrarConversaExemplo() {
+        if (state.conversaExemploAtiva) {
+            return;
+        }
+
+        const headerAvatar = document.getElementById('chat-header-avatar');
+        const stateButton = document.getElementById('chat-state-button');
+        const reviewButton = document.getElementById('chat-review-button');
+
+        snapshotExemplo = {
+            headerAvatar: headerAvatar ? headerAvatar.innerHTML : '',
+            headerName: headerName.textContent,
+            headerStatus: headerStatus.textContent,
+            messages: messagesEl.innerHTML,
+            conversationViewHidden: conversationView.classList.contains('hidden'),
+            emptyStateHidden: emptyState.classList.contains('hidden'),
+            inputDisabled: input.disabled,
+            sendDisabled: sendButton.disabled,
+            hint: composerHint.textContent,
+            stateHidden: stateButton ? stateButton.classList.contains('hidden') : true,
+            stateDisabled: stateButton ? stateButton.disabled : true,
+            stateText: stateButton ? stateButton.textContent : '',
+            reviewHidden: reviewButton ? reviewButton.classList.contains('hidden') : true
+        };
+
+        state.conversaExemploAtiva = true;
+        renderConversations(state.conversations);
+
+        if (headerAvatar) {
+            headerAvatar.textContent = 'E';
+        }
+        headerName.textContent = demoQuery + ' (exemplo)';
+        headerStatus.textContent = 'Conversa de exemplo · nada é salvo';
+
+        garantirAnimacaoExemplo();
+
+        const cliente = document.createElement('div');
+        cliente.className = 'flex justify-end roppin-demo-msg';
+        cliente.innerHTML = '<div class="max-w-[85%] rounded-2xl rounded-br-sm bg-red-700 px-4 py-2 text-white shadow-sm"><p class="mb-1 text-[11px] font-semibold opacity-70">Você</p><p class="whitespace-pre-wrap break-words text-sm">Olá! Preciso trocar uma tomada.</p><p class="mt-1 text-right text-[10px] opacity-60">agora</p></div>';
+        const prestador = document.createElement('div');
+        prestador.className = 'flex justify-start roppin-demo-msg';
+        prestador.innerHTML = '<div class="max-w-[85%] rounded-2xl rounded-bl-sm bg-white px-4 py-2 shadow-sm"><p class="mb-1 text-[11px] font-semibold opacity-70">Eletricista (exemplo)</p><p class="whitespace-pre-wrap break-words text-sm">Olá! Posso ajudar. Você já tem o material?</p><p class="mt-1 text-right text-[10px] opacity-60">agora</p></div>';
+
+        messagesEl.replaceChildren();
+        window.clearTimeout(timerMensagensExemplo);
+        timerMensagensExemplo = window.setTimeout(() => {
+            if (!state.conversaExemploAtiva) {
+                return;
+            }
+            messagesEl.append(cliente);
+            timerMensagensExemplo = window.setTimeout(() => {
+                if (!state.conversaExemploAtiva) {
+                    return;
+                }
+                messagesEl.append(prestador);
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            }, 700);
+        }, 350);
+        messagesEl.dataset.tour = 'chat-mensagens-exemplo';
+        showConversationView(true);
+        setComposerEnabled(true);
+    }
+
+    function removerConversaExemplo() {
+        if (!state.conversaExemploAtiva) {
+            return;
+        }
+
+        state.conversaExemploAtiva = false;
+        window.clearTimeout(timerMensagensExemplo);
+        timerMensagensExemplo = null;
+        renderConversations(state.conversations);
+        delete messagesEl.dataset.tour;
+
+        const snap = snapshotExemplo;
+        const headerAvatar = document.getElementById('chat-header-avatar');
+        const stateButton = document.getElementById('chat-state-button');
+        const reviewButton = document.getElementById('chat-review-button');
+
+        if (snap) {
+            if (headerAvatar) {
+                headerAvatar.innerHTML = snap.headerAvatar;
+            }
+            headerName.textContent = snap.headerName;
+            headerStatus.textContent = snap.headerStatus;
+            messagesEl.innerHTML = snap.messages;
+            conversationView.classList.toggle('hidden', snap.conversationViewHidden);
+            emptyState.classList.toggle('hidden', snap.emptyStateHidden);
+            input.disabled = snap.inputDisabled;
+            sendButton.disabled = snap.sendDisabled;
+            composerHint.textContent = snap.hint;
+            if (stateButton) {
+                stateButton.classList.toggle('hidden', snap.stateHidden);
+                stateButton.disabled = snap.stateDisabled;
+                stateButton.textContent = snap.stateText;
+            }
+            if (reviewButton) {
+                reviewButton.classList.toggle('hidden', snap.reviewHidden);
+            }
+        }
+        snapshotExemplo = null;
+    }
+
+    window.roppinChatConversaExemplo = (mostrar) => {
+        if (mostrar) {
+            mostrarConversaExemplo();
+        } else {
+            removerConversaExemplo();
+        }
+    };
+
+    window.roppinChatEncerrarDemo = () => {
+        demoMode = false;
+        removerConversaExemplo();
+        renderProviders(ultimosPrestadores);
+    };
 })();

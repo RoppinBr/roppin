@@ -4,19 +4,33 @@ require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../scripts/config.php';
 require_once __DIR__ . '/../services/ChatException.php';
 require_once __DIR__ . '/../services/ChatService.php';
+require_once __DIR__ . '/../services/ChatRateLimitService.php';
+require_once __DIR__ . '/../scripts/chat_guest.php';
+require_once __DIR__ . '/../repositories/ChatGuestSessionRepository.php';
+require_once __DIR__ . '/../repositories/UserRepository.php';
 
 class ChatController
 {
     private ChatService $chat;
+    private UserRepository $users;
+    private ChatGuestSessionRepository $guestSessions;
+    private ChatRateLimitService $rateLimit;
 
-    public function __construct(ChatService $chat)
-    {
+    public function __construct(
+        ChatService $chat,
+        UserRepository $users,
+        ChatGuestSessionRepository $guestSessions,
+        ?ChatRateLimitService $rateLimit = null
+    ) {
         $this->chat = $chat;
+        $this->users = $users;
+        $this->guestSessions = $guestSessions;
+        $this->rateLimit = $rateLimit ?? new ChatRateLimitService();
     }
 
     public function providers(array $input = []): ControllerResponse
     {
-        $user = $this->authenticatedUser();
+        $user = $this->currentChatUser();
         if (!$user) {
             return $this->unauthorized();
         }
@@ -43,7 +57,7 @@ class ChatController
 
     public function start(array $input): ControllerResponse
     {
-        $user = $this->authenticatedUser();
+        $user = $this->currentChatUser();
         if (!$user) {
             return $this->unauthorized();
         }
@@ -57,6 +71,8 @@ class ChatController
         }
 
         return $this->handle(function () use ($user, $input): ControllerResponse {
+            $this->rateLimit->check('nova_conversa');
+            $this->rateLimit->check('mensagem');
             $specialtyId = (int) ($input['especialidade_id'] ?? 0);
             $data = $this->chat->startConversation(
                 (int) $user->getId(),
@@ -80,7 +96,7 @@ class ChatController
 
     public function conversations(array $input = []): ControllerResponse
     {
-        $user = $this->authenticatedUser();
+        $user = $this->currentChatUser();
         if (!$user) {
             return $this->unauthorized();
         }
@@ -106,7 +122,7 @@ class ChatController
 
     public function conversation(array $input = []): ControllerResponse
     {
-        $user = $this->authenticatedUser();
+        $user = $this->currentChatUser();
         if (!$user) {
             return $this->unauthorized();
         }
@@ -136,7 +152,7 @@ class ChatController
 
     public function send(array $input): ControllerResponse
     {
-        $user = $this->authenticatedUser();
+        $user = $this->currentChatUser();
         if (!$user) {
             return $this->unauthorized();
         }
@@ -150,6 +166,7 @@ class ChatController
         }
 
         return $this->handle(function () use ($user, $input): ControllerResponse {
+            $this->rateLimit->check('mensagem');
             $data = $this->chat->sendMessage(
                 (int) $user->getId(),
                 $this->conversationIdFromToken((int) $user->getId(), $input),
@@ -177,7 +194,7 @@ class ChatController
 
     private function changeState(array $input, string $estado): ControllerResponse
     {
-        $user = $this->authenticatedUser();
+        $user = $this->currentChatUser();
         if (!$user) {
             return $this->unauthorized();
         }
@@ -210,7 +227,7 @@ class ChatController
 
     public function rate(array $input): ControllerResponse
     {
-        $user = $this->authenticatedUser();
+        $user = $this->currentChatUser();
         if (!$user) {
             return $this->unauthorized();
         }
@@ -242,7 +259,7 @@ class ChatController
 
     public function read(array $input): ControllerResponse
     {
-        $user = $this->authenticatedUser();
+        $user = $this->currentChatUser();
         if (!$user) {
             return $this->unauthorized();
         }
@@ -272,26 +289,23 @@ class ChatController
 
     public function unread(array $input = []): ControllerResponse
     {
-        $user = $this->authenticatedUser();
-        if (!$user) {
-            return $this->unauthorized();
-        }
-
         if ($response = $this->disabledResponse()) {
             return $response;
         }
 
+        $user = $this->currentChatUser();
+
         return $this->handle(function () use ($user): ControllerResponse {
             return new ControllerResponse([
                 'sucesso' => true,
-                'total' => $this->chat->unreadCount((int) $user->getId())
+                'total' => $user ? $this->chat->unreadCount((int) $user->getId()) : 0
             ]);
         });
     }
 
     public function focus(array $input): ControllerResponse
     {
-        $user = $this->authenticatedUser();
+        $user = $this->currentChatUser();
         if (!$user) {
             return $this->unauthorized();
         }
@@ -315,7 +329,7 @@ class ChatController
 
     public function blur(array $input): ControllerResponse
     {
-        $user = $this->authenticatedUser();
+        $user = $this->currentChatUser();
         if (!$user) {
             return $this->unauthorized();
         }
@@ -349,10 +363,9 @@ class ChatController
         }
     }
 
-    private function authenticatedUser(): User | false
+    private function currentChatUser(): User | false
     {
-        $user = $_SESSION['usuario_logado'] ?? null;
-        return $user instanceof User ? $user : false;
+        return chatCurrentUser($this->users, $this->guestSessions);
     }
 
     private function unauthorized(): ControllerResponse
